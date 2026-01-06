@@ -16,12 +16,18 @@ const updateProfile = async (
     })
     .where(eq(usersTable.id, userId));
 
-  await db.insert(userInterestsTable).values({
-    userId: userId,
-    interest: interest,
-    notes: notes,
-    priority: priority,
-  });
+  await db
+    .insert(userInterestsTable)
+    .values({
+      userId: userId,
+      interest: interest,
+      notes: notes,
+      priority: priority,
+    })
+    .onConflictDoUpdate({
+      target: [userInterestsTable.userId, userInterestsTable.interest],
+      set: { notes, priority },
+    });
 };
 
 export default updateProfile;

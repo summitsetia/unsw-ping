@@ -5,6 +5,7 @@ import {
   timestamp,
   integer,
   pgEnum,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -21,16 +22,25 @@ export const usersTable = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const userInterestsTable = pgTable("user_interests", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  interest: text("interest").notNull(),
-  notes: text("notes").notNull().default(""),
-  priority: integer("priority").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const userInterestsTable = pgTable(
+  "user_interests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    interest: text("interest").notNull(),
+    notes: text("notes").notNull().default(""),
+    priority: integer("priority").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("user_interests_user_id_interest_unique").on(
+      table.userId,
+      table.interest
+    ),
+  ]
+);
 
 export const messagesTable = pgTable("messages", {
   id: uuid("id").primaryKey().defaultRandom(),

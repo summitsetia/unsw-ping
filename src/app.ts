@@ -21,6 +21,7 @@ import {
   saveIncomingMessage,
   saveOutgoingMessage,
 } from "./queries/save-messages.js";
+import { findSocieties } from "./tools/find-societies.js";
 
 dotenv.config();
 
@@ -109,6 +110,15 @@ app.post("/webhooks/sendblue", async (req, res) => {
           execute: async ({ name, interests, notes, priority }) => {
             await updateProfile(userId, name, interests, notes, priority);
             return { ok: true };
+          },
+        }),
+        findSocieties: tool({
+          description: "Find societies that match the user's interests",
+          inputSchema: z.object({
+            interests: z.string().describe("The user's interests"),
+          }),
+          execute: async ({ interests }) => {
+            return await findSocieties(interests.split(","));
           },
         }),
       },
