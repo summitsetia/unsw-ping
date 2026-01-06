@@ -4,23 +4,23 @@ import { db } from "../db/db.js";
 
 const updateProfile = async (
   userId: string,
-  name: string,
-  interests: string,
+  user_name: string,
+  interest: string,
   notes: string,
   priority: number
 ) => {
   await db
     .update(usersTable)
     .set({
-      name: name,
+      name: user_name,
     })
     .where(eq(usersTable.id, userId));
 
   await db.insert(userInterestsTable).values({
     userId: userId,
-    interest: interests,
-    notes,
-    priority,
+    interest: interest,
+    notes: notes,
+    priority: priority,
   });
 };
 
