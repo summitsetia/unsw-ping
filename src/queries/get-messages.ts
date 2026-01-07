@@ -8,7 +8,7 @@ export const getMessages = async (userId: string) => {
     orderBy: [asc(messagesTable.createdAt)],
     limit: 5,
   });
-  return messages.reverse().map((message) => ({
+  return messages.map((message) => ({
     role: message.role,
     content: message.content,
   }));

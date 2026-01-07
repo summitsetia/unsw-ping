@@ -52,6 +52,14 @@ export const messagesTable = pgTable("messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const societiesTable = pgTable("societies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  societyName: text("society_name").notNull(),
+  title: text("title").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const usersRelations = relations(usersTable, ({ many }) => ({
   interests: many(userInterestsTable),
   messages: many(messagesTable),
