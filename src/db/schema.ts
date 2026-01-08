@@ -19,7 +19,9 @@ export const usersTable = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().default(""),
   phoneNumber: text("phone_number").notNull().unique(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .defaultNow(),
 });
 
 export const userInterestsTable = pgTable(
@@ -32,7 +34,9 @@ export const userInterestsTable = pgTable(
     interest: text("interest").notNull(),
     notes: text("notes").notNull().default(""),
     priority: integer("priority").notNull().default(0),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     uniqueIndex("user_interests_user_id_interest_unique").on(
@@ -49,15 +53,22 @@ export const messagesTable = pgTable("messages", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   role: messageRoles("role").notNull(),
   content: text("content").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .defaultNow(),
 });
 
-export const societiesTable = pgTable("societies", {
+export const eventsTable = pgTable("events", {
   id: uuid("id").primaryKey().defaultRandom(),
   societyName: text("society_name").notNull(),
-  title: text("title").notNull(),
-  startTime: timestamp("start_time").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  title: text("title").notNull().unique(),
+  startTime: timestamp("start_time", {
+    withTimezone: true,
+    mode: "date",
+  }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .defaultNow(),
 });
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
