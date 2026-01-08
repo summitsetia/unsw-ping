@@ -58,7 +58,7 @@ export const messagesTable = pgTable("messages", {
     .defaultNow(),
 });
 
-export const societiesTable = pgTable("societies", {
+export const eventsTable = pgTable("events", {
   id: uuid("id").primaryKey().defaultRandom(),
   societyName: text("society_name").notNull(),
   title: text("title").notNull().unique(),

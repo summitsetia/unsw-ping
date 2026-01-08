@@ -1,7 +1,7 @@
-import societies from "../filtered-societies.json" with { type: "json" };
+import societies from "../societies.json" with { type: "json" };
 import { chromium } from "playwright";
 import { db, client } from "../db/db.js";
-import { societiesTable } from "../db/schema.js";
+import { eventsTable } from "../db/schema.js";
 import { DateTime } from "luxon";
 
 const societiesWithFacebookUrl = societies.filter((s) => s.facebookurl);
@@ -28,7 +28,7 @@ try {
       if (!date) continue;
       console.log("Date:", date);
 
-      await db.insert(societiesTable).values({
+      await db.insert(eventsTable).values({
         societyName: society.title,
         title: eventDetails[1] || "",
         startTime: date,
