@@ -1,4 +1,4 @@
-import societies from "../societies.json" with { type: "json" };
+import societies from "../filtered-societies.json" with { type: "json" };
 import { chromium } from "playwright";
 import { db, client } from "../db/db.js";
 import { societiesTable } from "../db/schema.js";
@@ -6,33 +6,39 @@ import { DateTime } from "luxon";
 
 const societiesWithFacebookUrl = societies.filter((s) => s.facebookurl);
 
-for (const society of societiesWithFacebookUrl) {
-  const fb = normalizeFacebookPageUrl(society.facebookurl);
-  if (!fb) continue;
+try {
+  for (const society of societiesWithFacebookUrl) {
+    const fb = normalizeFacebookPageUrl(society.facebookurl);
+    if (!fb) continue;
 
-  const eventUrl = eventsUrl(society.facebookurl || "");
-  if (!eventUrl.includes('facebook.com')) continue;
+    const eventUrl = eventsUrl(society.facebookurl || "");
+    if (!eventUrl.includes('facebook.com')) continue;
 
-  const events = await scrapeEvents(eventUrl);
-  console.log("Events:", events);
+    const events = await scrapeEvents(eventUrl);
+    console.log("Events:", events);
 
-  for (const event of events) {
-    console.log(event.split('\n'));
-    const eventDetails = event.split('\n');
-    console.log("Event details:", eventDetails);
+    for (const event of events) {
+      console.log(event.split('\n'));
+      const eventDetails = event.split('\n');
+      console.log("Event details:", eventDetails);
 
-    if (eventDetails.length < 2) continue;
+      if (eventDetails.length < 2) continue;
 
-    const date = fbWhenToDateSydney(eventDetails[0]);
-    if (!date) continue;
-    console.log("Date:", date);
+      const date = fbWhenToDateSydney(eventDetails[0]);
+      if (!date) continue;
+      console.log("Date:", date);
 
-    await db.insert(societiesTable).values({
-      societyName: society.title,
-      title: eventDetails[1] || "",
-      startTime: date,
-    }).onConflictDoNothing();
+      await db.insert(societiesTable).values({
+        societyName: society.title,
+        title: eventDetails[1] || "",
+        startTime: date,
+      }).onConflictDoNothing();
+    }
   }
+} catch (error) {
+  console.error("Error:", error);
+} finally {
+  await client.end({ timeout: 5000 });
 }
 
 
@@ -125,7 +131,6 @@ function normalizeFacebookPageUrl(raw: unknown): string | null {
   return `https://www.facebook.com${path}`;
 }
 
-await client.end({ timeout: 5000 });
 
 
 
