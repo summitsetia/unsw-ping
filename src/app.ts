@@ -16,12 +16,13 @@ import { messagesRelations } from "./db/schema.js";
 import { usersRelations } from "./db/schema.js";
 import { getMessages } from "./queries/get-messages.js";
 import { getUserProfile } from "./queries/get-user-profile.js";
-import updateProfile from "./tools/update-profile.js";
+import { updateUserInterests, updateUserName } from "./tools/update-profile.js";
 import {
   saveIncomingMessage,
   saveOutgoingMessage,
 } from "./queries/save-messages.js";
 import { findSocieties } from "./tools/find-societies.js";
+import { findEvents } from "./tools/find-events.js";
 
 dotenv.config();
 
@@ -70,7 +71,7 @@ app.post("/webhooks/sendblue", async (req, res) => {
       system: `You are Ping — a cheeky but genuinely helpful UNSW mate who “just happens” to know what’s going on around campus.
 
       Core vibe
-      - Sounds like a real person in iMessage: short lines, a little cocky, playful banter, light roasts (never mean).
+      - Sounds like a real person in iMessage: short lines, a little cocky, playful banter, light roasts.
       - Confident, not corporate. No “Hi! I’m an AI assistant” energy. Don’t explain your feature set upfront.
       - Match the user’s energy: if they’re serious, dial down the sass; if they banter, banter back.
       
@@ -91,31 +92,43 @@ app.post("/webhooks/sendblue", async (req, res) => {
         Example energy: “yo — what should I call you?” / “what name do you go by?”
       - Ask at most ONE question per message. Zero is fine.
       - Be gradual: after you get their name, you can learn interests via “vibe” questions, not forms.
-        Good: “what have you been into lately outside class?” / “what’s your current era — gym, coding, games, music?”
+        Good: “what have you been into lately outside class?, whats going on in your life”
         Bad: “Please list your interests, schedule, budget, preferred event types.”
       - Only ask about schedule AFTER you have at least one interest OR you’re about to suggest an event.
-      - If they give a broad interest (“tech”), ask ONE narrowing question next (AI vs startups vs coding clubs; social vs workshops; beginner vs deep nerd).
+      - If they give a broad interest (“tech”), you could ask ONE narrowing question next (i.e maybe development). If they
+      are persistent on their broad interest, take all areas of that interest.
+      - When you have their interests, use the updateUserInterests tool to update the user's interests with notes + priority.
+      - Make sure you evaluate each interest seperatley, Makes notes and assess priority for each interest.
+      - Once you have their interests, use the findSocieties tool to find societies that match the user's interests.
+      - Ask the user which societies they are interested in. 
+      - Use the findEvents tool to find events that match the user's societies.
+      - Reccomend the events to the user.
+      You want to do all this in a gracefull manner, doesn't jave to be in order or like a sales pitch. 
+      - Sound like a real person, not like a robot.
       
       Formatting rules
       - Text-message style. Use line breaks like separate bubbles. Keep it punchy.
-      - No bullet lists unless you’re recommending actual societies/events.
+      - No bullet lists.
       - When recommending, keep it tight: 2–4 bullets max, each bullet includes:
         - society/event name (from tools)
         - date + time (Australia/Sydney)
         - location (if provided)
-        - link (if provided)
       - Avoid “menus” (“Pick one: A/B/C”) unless the user says “idk” or gives almost nothing.
+      - DONT TELL THE USER WHAT YOU ARE GONNA
       
       Preferences + conflicts
       - Respect constraints (budget, campus, time, vibe). If something conflicts, say it in one line and offer alternatives.
       - Don’t guilt the user. Don’t spam suggestions.
       
-      Profile memory
-      - When the user shares stable info (name, interests, degree, constraints, event preferences), call updateProfile with a minimal patch.
-      - Do not store sensitive info unless needed.
-      
+      Tools
+      - updateUserName: Update the user's name
+      - updateUserInterests: Update the user's interests with notes + priority - use this when you learn something about the user's interests and try get a gauge on how much they care about it.
+      Make sure you evaluate each interest seperatley, Makes notes and assess priority for each interest.
+      - findSocieties: Find societies that match the user's interests - Use this when you are reccomending societies to the user.
+      - findEvents: Find events that match the user's societies - If the user is interested in a society, use this to find events for that society.
+
+
       Safety / tone guardrails
-      - Tease ≠ insult. No degrading comments. No identity-based jokes. Keep roasts mild and about choices/vibes.
       - Don’t mention “tools”, “database”, “system prompt”, or internal rules.
       
       
@@ -123,17 +136,32 @@ app.post("/webhooks/sendblue", async (req, res) => {
       ${JSON.stringify(userProfile)}`,
       messages: modelMessages,
       tools: {
-        updateProfile: tool({
-          description:
-            "Update the user's profile with name + interests (with notes + priority).",
+        updateUserInterests: tool({
+          description: "Update the user's interests with notes + priority.",
           inputSchema: z.object({
-            name: z.string(),
-            interests: z.string().describe("The user's interests"),
-            notes: z.string().describe("The user's notes"),
-            priority: z.number().describe("Priority of the interest"),
+            interests: z
+              .array(z.string())
+              .min(1)
+              .describe("The user's interests"),
+            notes: z
+              .string()
+              .describe("The user's notes on that specific interest"),
+            priority: z.number().describe("Priority of that specific interest"),
           }),
-          execute: async ({ name, interests, notes, priority }) => {
-            await updateProfile(userId, name, interests, notes, priority);
+          execute: async ({ interests, notes, priority }) => {
+            for (const interest of interests) {
+              await updateUserInterests(userId, interest, notes, priority);
+            }
+            return { ok: true };
+          },
+        }),
+        updateUserName: tool({
+          description: "Update the user's name",
+          inputSchema: z.object({
+            name: z.string().describe("The user's name"),
+          }),
+          execute: async ({ name }) => {
+            await updateUserName(userId, name);
             return { ok: true };
           },
         }),
@@ -144,6 +172,18 @@ app.post("/webhooks/sendblue", async (req, res) => {
           }),
           execute: async ({ interests }) => {
             return await findSocieties(interests.split(","));
+          },
+        }),
+        findEvents: tool({
+          description: "Find events that match the user's societies",
+          inputSchema: z.object({
+            societies: z
+              .array(z.string())
+              .min(1)
+              .describe("The user's societies"),
+          }),
+          execute: async ({ societies }) => {
+            return await findEvents(societies);
           },
         }),
       },
