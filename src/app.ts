@@ -216,6 +216,10 @@ app.post("/webhooks/sendblue", async (req, res) => {
   }
 });
 
+app.get("/google/callback", async (req, res) => {
+  const code = req.query.code;
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

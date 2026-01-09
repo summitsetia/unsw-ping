@@ -55,5 +55,14 @@
       "destination": "/?s=12421",
       "societyid": "12421",
       "title": "Advertising & Public Relations Society"
+  },
+  {
+    "image": "https://campus.hellorubric.com/assets/images/society_default_img.jpg",
+    "facebookurl": "https://www.facebook.com/unswrunsoc",
+    "societyAvgRating": 0,
+    "subtitle": "University of New South Wales",
+    "destination": "/?s=12472",
+    "societyid": "12472",
+    "title": "Campus Runners"
   }
 ]
