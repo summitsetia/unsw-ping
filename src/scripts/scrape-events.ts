@@ -1,4 +1,4 @@
-import societies from "../societies.json" with { type: "json" };
+import societies from "../filtered-societies.json" with { type: "json" };
 import { chromium } from "playwright";
 import { db, client } from "../db/db.js";
 import { eventsTable } from "../db/schema.js";
@@ -32,6 +32,7 @@ try {
         societyName: society.title,
         title: eventDetails[1] || "",
         startTime: date,
+        location: eventDetails[2] || "",
       }).onConflictDoNothing();
     }
   }
@@ -130,7 +131,6 @@ function normalizeFacebookPageUrl(raw: unknown): string | null {
 
   return `https://www.facebook.com${path}`;
 }
-
 
 
 
