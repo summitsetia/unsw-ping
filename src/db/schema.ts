@@ -72,6 +72,55 @@ export const eventsTable = pgTable("events", {
     .defaultNow(),
 });
 
+export const calendarConnectRequestsTable = pgTable(
+  "calendar_connect_requests",
+  {
+    id: text("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+  }
+);
+
+export const googleCalendarTokensTable = pgTable("google_calendar_tokens", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .defaultNow(),
+});
+
+export const calendarConnectRequestsRelations = relations(
+  calendarConnectRequestsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [calendarConnectRequestsTable.userId],
+      references: [usersTable.id],
+    }),
+  })
+);
+
+export const googleCalendarTokensRelations = relations(
+  googleCalendarTokensTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [googleCalendarTokensTable.userId],
+      references: [usersTable.id],
+    }),
+  })
+);
+
 export const usersRelations = relations(usersTable, ({ many }) => ({
   interests: many(userInterestsTable),
   messages: many(messagesTable),

@@ -9,11 +9,6 @@ import type { ModelMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { db } from "./db/db.js";
 import { usersTable } from "./db/schema.js";
-import { userInterestsTable } from "./db/schema.js";
-import { messagesTable } from "./db/schema.js";
-import { userInterestsRelations } from "./db/schema.js";
-import { messagesRelations } from "./db/schema.js";
-import { usersRelations } from "./db/schema.js";
 import { getMessages } from "./queries/get-messages.js";
 import { getUserProfile } from "./queries/get-user-profile.js";
 import { updateUserInterests, updateUserName } from "./tools/update-profile.js";
@@ -23,6 +18,9 @@ import {
 } from "./queries/save-messages.js";
 import { findSocieties } from "./tools/find-societies.js";
 import { findEvents } from "./tools/find-events.js";
+import googleCalendarRouter from "./routes/google-calender.js";
+import { googleLink } from "./tools/google-link.js";
+import { addEventToUser } from "./tools/add-event-to-user.js";
 
 dotenv.config();
 
@@ -84,7 +82,6 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - Treat database/tool outputs as ground truth for societies/events. NEVER invent society names, event times, venues, or links.
       - If the tools return nothing, say so plainly and pivot (ask one casual question or suggest widening filters).
       - Always show event dates/times in Australia/Sydney timezone.
-      - Include the event link if available; if no link is provided by tools, say “no link listed”.
       
       Conversation pacing (no Q&A vibe)
       - Don’t “pitch” what you do in the first message. Start like a person who just showed up.
@@ -103,6 +100,13 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - Ask the user which societies they are interested in. 
       - Use the findEvents tool to find events that match the user's societies.
       - Reccomend the events to the user.
+      Google Calendar Integration:
+      Call the addEventToUser tool to add the events to the user's google calender.
+      If it throws an error, prompt them to connect their google calender by calling the googleLink tool.
+      - If the user has not connected their google calender, ask them to connect it by calling the googleLink tool.
+      - If the user has already connected their google calender, don't ask them again and use the addEventToUser tool to add the events to their google calender.
+      - Once the user has connected their google calender, you can add events to the user's google calender using the addEventToUser tool.
+
       You want to do all this in a gracefull manner, doesn't jave to be in order or like a sales pitch. 
       - Sound like a real person, not like a robot.
       
@@ -126,7 +130,8 @@ app.post("/webhooks/sendblue", async (req, res) => {
       Make sure you evaluate each interest seperatley, Makes notes and assess priority for each interest.
       - findSocieties: Find societies that match the user's interests - Use this when you are reccomending societies to the user.
       - findEvents: Find events that match the user's societies - If the user is interested in a society, use this to find events for that society.
-
+      - googleLink: Generate a link to connect the user's google calender, this is an oauth link so you can later on add events to the user's google calender.
+      - addEventToUser: Add an event to the user's Google Calendar - Use this when you are reccomending events to the user and they have connected their google calender.
 
       Safety / tone guardrails
       - Don’t mention “tools”, “database”, “system prompt”, or internal rules.
@@ -186,6 +191,43 @@ app.post("/webhooks/sendblue", async (req, res) => {
             return await findEvents(societies);
           },
         }),
+        googleLink: tool({
+          description: "Generate a link to connect the user's Google Calendar",
+          inputSchema: z.object({}),
+          execute: async () => {
+            const url = await googleLink(userId);
+            return { url };
+          },
+        }),
+        addEventToUser: tool({
+          description: "Add an event to the user's Google Calendar",
+          inputSchema: z.object({
+            title: z.string().describe("The event title"),
+            location: z.string().describe("The event location"),
+            start: z
+              .string()
+              .describe(
+                "The event start time (ISO datetime, e.g. 2026-01-11T10:30:00+11:00)"
+              ),
+          }),
+          execute: async ({ title, location, start }) => {
+            const startDate = new Date(start);
+            if (Number.isNaN(startDate.getTime())) {
+              throw new Error(
+                "Invalid 'start' datetime. Expected ISO datetime string."
+              );
+            }
+
+            const event = await addEventToUser(
+              userId,
+              title,
+              location,
+              startDate
+            );
+            console.log("Event added to Google Calendar", event);
+            return { event };
+          },
+        }),
       },
       stopWhen: stepCountIs(6),
     });
@@ -216,9 +258,7 @@ app.post("/webhooks/sendblue", async (req, res) => {
   }
 });
 
-app.get("/google/callback", async (req, res) => {
-  const code = req.query.code;
-});
+app.use(googleCalendarRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
