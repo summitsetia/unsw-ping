@@ -17,6 +17,7 @@ export const findEvents = async (societies: string[]) => {
         societyName: eventsTable.societyName,
         title: eventsTable.title,
         startTime: eventsTable.startTime,
+        location: eventsTable.location,
       })
       .from(eventsTable)
       .where(eq(eventsTable.societyName, society));
