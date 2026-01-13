@@ -101,6 +101,17 @@ export const googleCalendarTokensTable = pgTable("google_calendar_tokens", {
     .defaultNow(),
 });
 
+export const userSocietiesTable = pgTable("user_societies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  society_name: text("society_name").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .defaultNow(),
+});
+
 export const calendarConnectRequestsRelations = relations(
   calendarConnectRequestsTable,
   ({ one }) => ({
@@ -124,6 +135,7 @@ export const googleCalendarTokensRelations = relations(
 export const usersRelations = relations(usersTable, ({ many }) => ({
   interests: many(userInterestsTable),
   messages: many(messagesTable),
+  societies: many(userSocietiesTable),
 }));
 
 export const userInterestsRelations = relations(
@@ -142,3 +154,13 @@ export const messagesRelations = relations(messagesTable, ({ one }) => ({
     references: [usersTable.id],
   }),
 }));
+
+export const userSocietiesRelations = relations(
+  userSocietiesTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [userSocietiesTable.userId],
+      references: [usersTable.id],
+    }),
+  })
+);
