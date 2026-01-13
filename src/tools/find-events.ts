@@ -1,31 +1,34 @@
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db } from "../db/db.js";
 import { eventsTable } from "../db/schema.js";
+import { DateTime } from "luxon";
 
 export const findEvents = async (societies: string[]) => {
   if (!societies.length) return [];
 
-  const eventResults: {
-    societyName: string;
-    title: string;
-    startTime: Date;
-  }[] = [];
+  const events = await db
+    .select({
+      societyName: eventsTable.societyName,
+      title: eventsTable.title,
+      startTime: eventsTable.startTime,
+      location: eventsTable.location,
+    })
+    .from(eventsTable)
+    .where(inArray(eventsTable.societyName, societies));
 
-  for (const society of societies) {
-    const events = await db
-      .select({
-        societyName: eventsTable.societyName,
-        title: eventsTable.title,
-        startTime: eventsTable.startTime,
-        location: eventsTable.location,
-      })
-      .from(eventsTable)
-      .where(eq(eventsTable.societyName, society));
-    console.log(events);
-    eventResults.push(...events);
-  }
+  return events
+    .map((e) => {
+      const nowSyd = DateTime.now().setZone("Australia/Sydney");
+      const startSydney = DateTime.fromJSDate(e.startTime, {
+        zone: "utc",
+      }).setZone("Australia/Sydney");
+      const isInFuture = startSydney > nowSyd;
+      if (!isInFuture) return null;
 
-  console.log(eventResults);
-
-  return eventResults;
+      return {
+        ...e,
+        startTime: startSydney.toJSDate(),
+      };
+    })
+    .filter((e): e is NonNullable<typeof e> => e !== null);
 };

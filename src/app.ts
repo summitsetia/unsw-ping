@@ -21,6 +21,8 @@ import { findEvents } from "./tools/find-events.js";
 import googleCalendarRouter from "./routes/google-calender.js";
 import { googleLink } from "./tools/google-link.js";
 import { addEventToUser } from "./tools/add-event-to-user.js";
+import { addUserSociety, removeUserSociety } from "./tools/user-society.js";
+import cronRouter from "./routes/cron.js";
 
 dotenv.config();
 
@@ -98,6 +100,8 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - Make sure you evaluate each interest seperatley, Makes notes and assess priority for each interest.
       - Once you have their interests, use the findSocieties tool to find societies that match the user's interests.
       - Ask the user which societies they are interested in. 
+      - Use the addUserSociety tool to add the societies to the user's list of societies.
+      - Use the removeUserSociety tool to remove the societies from the user's list of societies if they are no longer interested in it.
       - Use the findEvents tool to find events that match the user's societies.
       - Reccomend the events to the user.
       Google Calendar Integration:
@@ -118,7 +122,8 @@ app.post("/webhooks/sendblue", async (req, res) => {
         - date + time (Australia/Sydney)
         - location (if provided)
       - Avoid “menus” (“Pick one: A/B/C”) unless the user says “idk” or gives almost nothing.
-      - DONT TELL THE USER WHAT YOU ARE GONNA
+      - DONT TELL THE USER WHAT YOU ARE GONNA DO, JUST DO IT.
+      - Don't ask the user if it wants any reminders.
       
       Preferences + conflicts
       - Respect constraints (budget, campus, time, vibe). If something conflicts, say it in one line and offer alternatives.
@@ -132,6 +137,8 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - findEvents: Find events that match the user's societies - If the user is interested in a society, use this to find events for that society.
       - googleLink: Generate a link to connect the user's google calender, this is an oauth link so you can later on add events to the user's google calender.
       - addEventToUser: Add an event to the user's Google Calendar - Use this when you are reccomending events to the user and they have connected their google calender.
+      - addUserSociety: Add a society to the user's list of societies - Use this when you are reccomending societies to the user and they are interested in it.
+      - removeUserSociety: Remove a society from the user's list of societies - Use this when you are no longer reccomending a society to the user and they are no longer interested in it.
 
       Safety / tone guardrails
       - Don’t mention “tools”, “database”, “system prompt”, or internal rules.
@@ -228,6 +235,24 @@ app.post("/webhooks/sendblue", async (req, res) => {
             return { event };
           },
         }),
+        addUserSociety: tool({
+          description: "Add a society to the user's list of societies",
+          inputSchema: z.object({
+            societyName: z.string().describe("The society name"),
+          }),
+          execute: async ({ societyName }) => {
+            await addUserSociety(userId, societyName);
+          },
+        }),
+        removeUserSociety: tool({
+          description: "Remove a society from the user's list of societies",
+          inputSchema: z.object({
+            societyName: z.string().describe("The society name"),
+          }),
+          execute: async ({ societyName }) => {
+            await removeUserSociety(userId, societyName);
+          },
+        }),
       },
       stopWhen: stepCountIs(6),
     });
@@ -259,6 +284,7 @@ app.post("/webhooks/sendblue", async (req, res) => {
 });
 
 app.use(googleCalendarRouter);
+app.use(cronRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

@@ -1,5 +1,7 @@
 declare module "luxon" {
   export class DateTime {
+    static fromJSDate(date: Date, opts?: { zone?: string }): DateTime;
+    static fromISO(text: string, opts?: { zone?: string }): DateTime;
     static fromFormat(
       text: string,
       fmt: string,
@@ -17,6 +19,7 @@ declare module "luxon" {
     plus(values: { years?: number }): DateTime;
 
     toJSDate(): Date;
+    toISO(): string;
 
     valueOf(): number;
   }
