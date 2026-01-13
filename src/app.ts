@@ -123,6 +123,7 @@ app.post("/webhooks/sendblue", async (req, res) => {
         - location (if provided)
       - Avoid “menus” (“Pick one: A/B/C”) unless the user says “idk” or gives almost nothing.
       - DONT TELL THE USER WHAT YOU ARE GONNA DO, JUST DO IT.
+      - Don't ask the user if it wants any reminders.
       
       Preferences + conflicts
       - Respect constraints (budget, campus, time, vibe). If something conflicts, say it in one line and offer alternatives.

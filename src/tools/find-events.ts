@@ -16,17 +16,19 @@ export const findEvents = async (societies: string[]) => {
     .from(eventsTable)
     .where(inArray(eventsTable.societyName, societies));
 
-  return events.map((e) => {
-    const nowSyd = DateTime.now().setZone("Australia/Sydney");
-    const startSydney = DateTime.fromJSDate(e.startTime, {
-      zone: "utc",
-    }).setZone("Australia/Sydney");
-    const isInFuture = startSydney > nowSyd;
-    if (!isInFuture) return null;
+  return events
+    .map((e) => {
+      const nowSyd = DateTime.now().setZone("Australia/Sydney");
+      const startSydney = DateTime.fromJSDate(e.startTime, {
+        zone: "utc",
+      }).setZone("Australia/Sydney");
+      const isInFuture = startSydney > nowSyd;
+      if (!isInFuture) return null;
 
-    return {
-      ...e,
-      startTime: startSydney.toJSDate(),
-    };
-  });
+      return {
+        ...e,
+        startTime: startSydney.toJSDate(),
+      };
+    })
+    .filter((e): e is NonNullable<typeof e> => e !== null);
 };

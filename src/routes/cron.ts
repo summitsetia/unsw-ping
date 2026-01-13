@@ -14,7 +14,16 @@ router.get("/api/cron/process-reminders", async () => {
     const eventUtc = DateTime.fromJSDate(event.startTime, { zone: "utc" });
     const reminderTime = eventUtc.minus({ days: 0.5 });
 
-    const shouldSend = reminderTime === nowUtc;
+    if (event.reminderSentAt) continue;
+
+    const shouldSend =
+      nowUtc >= reminderTime &&
+      nowUtc < reminderTime.plus({ years: 0.0000019013 });
+
+    await db
+      .update(eventsTable)
+      .set({ reminderSentAt: new Date() })
+      .where(eq(eventsTable.id, event.id));
 
     if (shouldSend) {
       const rows = await db

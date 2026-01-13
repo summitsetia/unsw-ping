@@ -70,6 +70,10 @@ export const eventsTable = pgTable("events", {
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .notNull()
     .defaultNow(),
+  reminderSentAt: timestamp("reminder_set_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
 });
 
 export const calendarConnectRequestsTable = pgTable(
@@ -101,16 +105,25 @@ export const googleCalendarTokensTable = pgTable("google_calendar_tokens", {
     .defaultNow(),
 });
 
-export const userSocietiesTable = pgTable("user_societies", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  society_name: text("society_name").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-    .notNull()
-    .defaultNow(),
-});
+export const userSocietiesTable = pgTable(
+  "user_societies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    society_name: text("society_name").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("user_societies_user_id_society_name_unique").on(
+      table.userId,
+      table.society_name
+    ),
+  ]
+);
 
 export const calendarConnectRequestsRelations = relations(
   calendarConnectRequestsTable,
