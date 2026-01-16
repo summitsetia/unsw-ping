@@ -62,6 +62,7 @@ export const eventsTable = pgTable("events", {
   id: uuid("id").primaryKey().defaultRandom(),
   societyName: text("society_name").notNull(),
   title: text("title").notNull().unique(),
+  description: text("description").notNull().default(""),
   startTime: timestamp("start_time", {
     withTimezone: true,
     mode: "date",
