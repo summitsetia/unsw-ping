@@ -3,6 +3,9 @@ import { chromium } from "playwright";
 import { db, client } from "../db/db.js";
 import { eventsTable } from "../db/schema.js";
 import { DateTime } from "luxon";
+import { embed } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { eq } from "drizzle-orm";
 
 type ParsedEvent = {
   title: string;
@@ -30,19 +33,55 @@ try {
         continue;
       }
 
-      await db.insert(eventsTable).values({
-        societyName: society.title,
-        title: event.title,
-        startTime: date,
-        location: event.location,
-        description: event.description,
-      }).onConflictDoNothing();
+      const inserted = await db
+        .insert(eventsTable)
+        .values({
+          societyName: society.title,
+          title: event.title,
+          startTime: date,
+          location: event.location,
+          description: event.description,
+        })
+        .onConflictDoNothing()
+        .returning({ id: eventsTable.id });
+        
+      const insertedId = inserted[0]?.id;
+      if (insertedId) {
+        const textToEmbed = eventTextToEmbed(event);
+        if (textToEmbed) {
+          try {
+            const { embedding } = await embed({
+              model: openai.embedding("text-embedding-3-small"),
+              value: textToEmbed,
+            });
+
+            await db
+              .update(eventsTable)
+              .set({ embedding })
+              .where(eq(eventsTable.id, insertedId));
+          } catch (e) {
+            console.warn(
+              `Failed to embed event "${event.title}" (still saved without embedding).`,
+              e
+            );
+          }
+        }
+      }
     }
   }
 } catch (error) {
   console.error("Error:", error);
 } finally {
   await client.end({ timeout: 5000 });
+}
+
+function eventTextToEmbed(event: ParsedEvent): string {
+  const title = event.title.trim();
+  const description = event.description.trim();
+
+  const text = `${title}\n\n${description}`.trim();
+
+  return text.slice(0, 6000);
 }
 
 
