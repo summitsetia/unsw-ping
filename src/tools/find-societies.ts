@@ -49,5 +49,5 @@ export const findSocieties = async (interests: string[]) => {
 
   scored.sort((a, b) => b.score - a.score);
 
-  return scored.slice(0, 5);
+  return scored.slice(0, 20);
 };

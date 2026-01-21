@@ -6,6 +6,8 @@ import {
   integer,
   pgEnum,
   uniqueIndex,
+  vector,
+  index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -58,23 +60,34 @@ export const messagesTable = pgTable("messages", {
     .defaultNow(),
 });
 
-export const eventsTable = pgTable("events", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  societyName: text("society_name").notNull(),
-  title: text("title").notNull().unique(),
-  startTime: timestamp("start_time", {
-    withTimezone: true,
-    mode: "date",
-  }).notNull(),
-  location: text("location").notNull().default(""),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-    .notNull()
-    .defaultNow(),
-  reminderSentAt: timestamp("reminder_set_at", {
-    withTimezone: true,
-    mode: "date",
-  }),
-});
+export const eventsTable = pgTable(
+  "events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    societyName: text("society_name").notNull(),
+    title: text("title").notNull().unique(),
+    description: text("description").notNull().default(""),
+    startTime: timestamp("start_time", {
+      withTimezone: true,
+      mode: "date",
+    }).notNull(),
+    location: text("location").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+    reminderSentAt: timestamp("reminder_set_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    embedding: vector("embedding", { dimensions: 1536 }),
+  },
+  (t) => [
+    index("events_embedding_hnsw").using(
+      "hnsw",
+      t.embedding.op("vector_cosine_ops")
+    ),
+  ]
+);
 
 export const calendarConnectRequestsTable = pgTable(
   "calendar_connect_requests",

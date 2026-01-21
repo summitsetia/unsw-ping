@@ -1,10 +1,14 @@
-import { inArray } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import { db } from "../db/db.js";
 import { eventsTable } from "../db/schema.js";
 import { DateTime } from "luxon";
 
 export const findEvents = async (societies: string[]) => {
-  if (!societies.length) return [];
+  const societiesLower = societies
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (!societiesLower.length) return [];
 
   const events = await db
     .select({
@@ -14,21 +18,20 @@ export const findEvents = async (societies: string[]) => {
       location: eventsTable.location,
     })
     .from(eventsTable)
-    .where(inArray(eventsTable.societyName, societies));
+    .where(
+      inArray(sql<string>`lower(${eventsTable.societyName})`, societiesLower)
+    );
+
+  const nowSyd = DateTime.now().setZone("Australia/Sydney");
 
   return events
     .map((e) => {
-      const nowSyd = DateTime.now().setZone("Australia/Sydney");
-      const startSydney = DateTime.fromJSDate(e.startTime, {
-        zone: "utc",
-      }).setZone("Australia/Sydney");
-      const isInFuture = startSydney > nowSyd;
-      if (!isInFuture) return null;
+      const startSydney = DateTime.fromJSDate(e.startTime).setZone(
+        "Australia/Sydney"
+      );
+      if (startSydney <= nowSyd) return null;
 
-      return {
-        ...e,
-        startTime: startSydney.toJSDate(),
-      };
+      return { ...e, startTime: startSydney.toJSDate() };
     })
     .filter((e): e is NonNullable<typeof e> => e !== null);
 };

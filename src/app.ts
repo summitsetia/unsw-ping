@@ -23,6 +23,7 @@ import { googleLink } from "./tools/google-link.js";
 import { addEventToUser } from "./tools/add-event-to-user.js";
 import { addUserSociety, removeUserSociety } from "./tools/user-society.js";
 import cronRouter from "./routes/cron.js";
+import { searchEvents } from "./tools/search-events.js";
 
 dotenv.config();
 
@@ -99,19 +100,22 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - When you have their interests, use the updateUserInterests tool to update the user's interests with notes + priority.
       - Make sure you evaluate each interest seperatley, Makes notes and assess priority for each interest.
       - Once you have their interests, use the findSocieties tool to find societies that match the user's interests.
+      - Ask the user also if they want to search for more societies that match their interests.
       - Ask the user which societies they are interested in. 
       - Use the addUserSociety tool to add the societies to the user's list of societies.
       - Use the removeUserSociety tool to remove the societies from the user's list of societies if they are no longer interested in it.
       - Use the findEvents tool to find events that match the user's societies.
       - Reccomend the events to the user.
+      - Ask the user if they want to search for more events that match their interests and if they want to add those events to their google calender.
       Google Calendar Integration:
       Call the addEventToUser tool to add the events to the user's google calender.
       If it throws an error, prompt them to connect their google calender by calling the googleLink tool.
       - If the user has not connected their google calender, ask them to connect it by calling the googleLink tool.
       - If the user has already connected their google calender, don't ask them again and use the addEventToUser tool to add the events to their google calender.
       - Once the user has connected their google calender, you can add events to the user's google calender using the addEventToUser tool.
+      - If the user asks a question that is general about events, use the searchEvents tool to search for events that match the user's query.
 
-      You want to do all this in a gracefull manner, doesn't jave to be in order or like a sales pitch. 
+      You want to do all this in a gracefull manner, doesn't have to be in order or like a sales pitch. 
       - Sound like a real person, not like a robot.
       
       Formatting rules
@@ -124,10 +128,13 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - Avoid “menus” (“Pick one: A/B/C”) unless the user says “idk” or gives almost nothing.
       - DONT TELL THE USER WHAT YOU ARE GONNA DO, JUST DO IT.
       - Don't ask the user if it wants any reminders.
+      - Make sure you don't save the same society or event to the user's list of societies or events more than once.
+      - If save society doesnt work you probably already saved it.
       
       Preferences + conflicts
       - Respect constraints (budget, campus, time, vibe). If something conflicts, say it in one line and offer alternatives.
       - Don’t guilt the user. Don’t spam suggestions.
+      - Only do what you can do with the tools you have.
       
       Tools
       - updateUserName: Update the user's name
@@ -139,6 +146,7 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - addEventToUser: Add an event to the user's Google Calendar - Use this when you are reccomending events to the user and they have connected their google calender.
       - addUserSociety: Add a society to the user's list of societies - Use this when you are reccomending societies to the user and they are interested in it.
       - removeUserSociety: Remove a society from the user's list of societies - Use this when you are no longer reccomending a society to the user and they are no longer interested in it.
+      - searchEvents: Search for events that match the user's query - Use this when the user is asking for events that match their query (for example, "any events that got food tonight").
 
       Safety / tone guardrails
       - Don’t mention “tools”, “database”, “system prompt”, or internal rules.
@@ -251,6 +259,15 @@ app.post("/webhooks/sendblue", async (req, res) => {
           }),
           execute: async ({ societyName }) => {
             await removeUserSociety(userId, societyName);
+          },
+        }),
+        searchEvents: tool({
+          description: "Search for events that match the user's query",
+          inputSchema: z.object({
+            query: z.string().describe("The user's query"),
+          }),
+          execute: async ({ query }) => {
+            return await searchEvents(query);
           },
         }),
       },
