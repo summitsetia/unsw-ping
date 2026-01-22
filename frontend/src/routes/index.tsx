@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useForm } from 'react-hook-form'
@@ -7,6 +7,13 @@ type PhoneFormData = { phone: string }
 type CodeFormData = { code: string }
 
 export const Route = createFileRoute('/')({
+  beforeLoad: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const isAuthed = !!session;
+    if (isAuthed) {
+      throw redirect({ to: '/dashboard' });
+    }
+  },
   component: LandingPage,
 })
 
