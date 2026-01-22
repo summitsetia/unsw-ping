@@ -24,11 +24,16 @@ import { addEventToUser } from "./tools/add-event-to-user.js";
 import { addUserSociety, removeUserSociety } from "./tools/user-society.js";
 import cronRouter from "./routes/cron.js";
 import { searchEvents } from "./tools/search-events.js";
+// import { createClerkClient } from "@clerk/backend";
+import { supabaseAdmin } from "./utils/supabase.js";
+import { eq } from "drizzle-orm";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
 
 app.use(cors());
 
@@ -44,6 +49,12 @@ app.post("/webhooks/sendblue", async (req, res) => {
     if (!content?.trim()) return res.sendStatus(200);
     console.log("Request body:", req.body);
 
+    // const response = await clerkClient.users.createUser({
+    //   phoneNumber: [from_number],
+    // })
+
+    // console.log("User created:", response);
+
     const user = await db
       .insert(usersTable)
       .values({
@@ -53,9 +64,33 @@ app.post("/webhooks/sendblue", async (req, res) => {
         target: usersTable.phoneNumber,
         set: { phoneNumber: from_number },
       })
-      .returning();
-    console.log("User inserted:", user);
-    const userId = user[0].id;
+      .returning({
+        id: usersTable.id,
+        supabaseAuthUserId: usersTable.supabaseAuthUserId,
+      });
+
+      console.log("User inserted:", user);
+      const userId = user[0].id;
+
+    if (!user[0].supabaseAuthUserId) {
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        phone: from_number,
+        phone_confirm: true,
+        user_metadata: { pingUserId: userId }, 
+      });
+
+      if (error) {
+        console.error("Error creating user in Supabase Auth:", error);
+      }
+
+      if (data?.user?.id) {
+        await db
+          .update(usersTable)
+          .set({ supabaseAuthUserId: data.user.id })
+          .where(eq(usersTable.id, userId));
+      }
+    }
+
     await saveIncomingMessage(userId, content);
     const userProfile = await getUserProfile(userId);
     const messages = await getMessages(userId);

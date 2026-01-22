@@ -21,6 +21,7 @@ export const usersTable = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().default(""),
   phoneNumber: text("phone_number").notNull().unique(),
+  supabaseAuthUserId: uuid("supabase_auth_user_id").unique(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .notNull()
     .defaultNow(),
