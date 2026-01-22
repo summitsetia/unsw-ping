@@ -13,6 +13,8 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
+import { Route as DashboardSubscriptionsRouteImport } from './routes/dashboard/subscriptions'
+import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard/integrations'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -34,15 +36,29 @@ const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   path: '/demo/tanstack-query',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardSubscriptionsRoute = DashboardSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardIntegrationsRoute = DashboardIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/dashboard': typeof DashboardIndexRoute
 }
@@ -50,15 +66,35 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/demo/tanstack-query' | '/dashboard/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/dashboard/integrations'
+    | '/dashboard/subscriptions'
+    | '/demo/tanstack-query'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/tanstack-query' | '/dashboard'
-  id: '__root__' | '/' | '/dashboard' | '/demo/tanstack-query' | '/dashboard/'
+  to:
+    | '/'
+    | '/dashboard/integrations'
+    | '/dashboard/subscriptions'
+    | '/demo/tanstack-query'
+    | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/dashboard/integrations'
+    | '/dashboard/subscriptions'
+    | '/demo/tanstack-query'
+    | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -97,14 +133,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoTanstackQueryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/subscriptions': {
+      id: '/dashboard/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/dashboard/subscriptions'
+      preLoaderRoute: typeof DashboardSubscriptionsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/integrations': {
+      id: '/dashboard/integrations'
+      path: '/integrations'
+      fullPath: '/dashboard/integrations'
+      preLoaderRoute: typeof DashboardIntegrationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardIntegrationsRoute: typeof DashboardIntegrationsRoute
+  DashboardSubscriptionsRoute: typeof DashboardSubscriptionsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardIntegrationsRoute: DashboardIntegrationsRoute,
+  DashboardSubscriptionsRoute: DashboardSubscriptionsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
