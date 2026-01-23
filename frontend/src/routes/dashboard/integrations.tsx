@@ -36,8 +36,11 @@ function Integrations() {
   return (
     <>
       <div className="mb-10">
-        <BackArrow />
-        <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
+        <div className="flex items-center gap-2">
+          <BackArrow />
+          <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
+        </div>
+
         <p className="mt-1 text-muted-foreground">
           Connect your calendar and apps to UNSW Ping.
         </p>

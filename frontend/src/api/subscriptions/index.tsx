@@ -13,3 +13,19 @@ export const removeSubscription = async (userId: string, societyName: string) =>
   if (error) throw error
   return societyName
 }
+
+export const addSubscriptions = async (userId: string, societyNames: string[]) => {
+  if (!societyNames.length) return []
+
+  const rows = societyNames.map((society_name) => ({
+    user_id: userId,
+    society_name,
+  }))
+
+  const { error } = await supabase
+    .from('user_societies')
+    .upsert(rows, { onConflict: 'user_id,society_name', ignoreDuplicates: true })
+
+  if (error) throw error
+  return societyNames
+}
