@@ -1,19 +1,20 @@
+import { Link } from "@tanstack/react-router"
 import { ChevronRight } from "lucide-react"
 
 export function MenuItem({
   title,
   description,
   icon: Icon,
-  href,
+  to,
 }: {
   title: string
   description: string
   icon: React.ComponentType<{ className?: string }>
-  href: string
+  to: string
 }) {
   return (
-    <a
-      href={href}
+    <Link
+      to={to}
       className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent"
     >
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted transition-colors group-hover:bg-background">
@@ -24,6 +25,6 @@ export function MenuItem({
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-    </a>
+    </Link>
   )
 }

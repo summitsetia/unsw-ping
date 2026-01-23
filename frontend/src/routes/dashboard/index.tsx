@@ -27,13 +27,13 @@ function Dashboard() {
       title: 'Event Subscriptions',
       description: 'Manage your event subscriptions',
       icon: MailCheck,
-      href: '/dashboard/subscriptions',
+      to: '/dashboard/subscriptions',
     },
     {
       title: 'Integrations',
       description: 'Connect your calendar and apps',
       icon: Link2,
-      href: '/dashboard/integrations',
+      to: '/dashboard/integrations',
     },
   ]
 
@@ -53,7 +53,7 @@ function Dashboard() {
             title={item.title}
             description={item.description}
             icon={item.icon}
-            href={item.href}
+            to={item.to}
           />
         ))}
       </nav>

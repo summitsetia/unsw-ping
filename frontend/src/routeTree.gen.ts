@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DashboardSubscriptionsRouteImport } from './routes/dashboard/subscriptions'
 import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard/integrations'
 
@@ -31,11 +30,6 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
-  id: '/demo/tanstack-query',
-  path: '/demo/tanstack-query',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardSubscriptionsRoute = DashboardSubscriptionsRouteImport.update({
   id: '/subscriptions',
   path: '/subscriptions',
@@ -52,14 +46,12 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
-  '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
-  '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -68,7 +60,6 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
-  '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -78,14 +69,12 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/integrations'
     | '/dashboard/subscriptions'
-    | '/demo/tanstack-query'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard/integrations'
     | '/dashboard/subscriptions'
-    | '/demo/tanstack-query'
     | '/dashboard'
   id:
     | '__root__'
@@ -93,14 +82,12 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/integrations'
     | '/dashboard/subscriptions'
-    | '/demo/tanstack-query'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRouteWithChildren
-  DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -125,13 +112,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
-    }
-    '/demo/tanstack-query': {
-      id: '/demo/tanstack-query'
-      path: '/demo/tanstack-query'
-      fullPath: '/demo/tanstack-query'
-      preLoaderRoute: typeof DemoTanstackQueryRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/dashboard/subscriptions': {
       id: '/dashboard/subscriptions'
@@ -169,7 +149,6 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRouteWithChildren,
-  DemoTanstackQueryRoute: DemoTanstackQueryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

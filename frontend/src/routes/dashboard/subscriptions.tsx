@@ -1,6 +1,5 @@
-import { supabase } from '@/lib/supabase'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -13,35 +12,28 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import societiesJson from '@/constants/societies.json'
+import { BackArrow } from '@/components/dashboard/back-arrow'
+import { useRemoveSubscription, useSubscriptions } from '@/hooks/user-queries'
 
 export const Route = createFileRoute('/dashboard/subscriptions')({
   loader: async ({ context }) => {
     const userId = (context as any).userId as string
-
-    const { data: societies, error } = await supabase
-      .from('user_societies')
-      .select('society_name')
-      .eq('user_id', userId)
-
-    if (error) {
-      return { societies: [], userId }
-    }
-
-    return { societies, userId }
+    return { userId }
   },
   component: Subscriptions,
 })
 
 function Subscriptions() {
-  const { societies: initialSocieties, userId } = Route.useLoaderData() as {
-    societies: { society_name: string }[]
-    userId: string
-  }
-  const [societies, setSocieties] = useState(initialSocieties)
-  const [removing, setRemoving] = useState<Record<string, boolean>>({})
-  const [error, setError] = useState<string | null>(null)
+  const { userId } = Route.useLoaderData() as { userId: string }
+
+  const {
+    data: societies = [],
+    isLoading,
+    error: subscriptionsError,
+  } = useSubscriptions(userId)
+  const removeMutation = useRemoveSubscription(userId)
 
   const sortedSocieties = useMemo(() => {
     return [...societies].sort((a, b) =>
@@ -49,41 +41,18 @@ function Subscriptions() {
     )
   }, [societies])
 
-  const removeSociety = async (societyName: string) => {
-    setError(null)
-    setRemoving((m) => ({ ...m, [societyName]: true }))
+  const removeSociety = (societyName: string) => {
+    removeMutation.mutate(societyName)
+  }
 
-    const { error: deleteError } = await supabase
-      .from('user_societies')
-      .delete()
-      .eq('user_id', userId)
-      .eq('society_name', societyName)
-
-    if (deleteError) {
-      setError('Could not remove subscription. Please try again.')
-      setRemoving((m) => ({ ...m, [societyName]: false }))
-      return
-    }
-
-    setSocieties((prev) =>
-      prev.filter((s) => s.society_name !== societyName)
-    )
-    setRemoving((m) => ({ ...m, [societyName]: false }))
+  if (isLoading && societies.length === 0) {
+    return <div className="text-sm text-muted-foreground">Loading…</div>
   }
 
   return (
     <>
       <div className="mb-10">
-        <Button
-          asChild
-          variant="ghost"
-          size="icon-sm"
-          className="-ml-2 mb-3"
-        >
-          <Link to="/dashboard" aria-label="Back to home">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
+        <BackArrow />
 
         <h1 className="text-2xl font-semibold tracking-tight">
           Event Subscriptions
@@ -91,8 +60,15 @@ function Subscriptions() {
         <p className="mt-1 text-muted-foreground">
           The societies you’re currently subscribed to.
         </p>
-        {error ? (
-          <p className="mt-3 text-sm text-destructive">{error}</p>
+        {subscriptionsError ? (
+          <p className="mt-3 text-sm text-destructive">
+            Couldn’t load subscriptions. Please try again.
+          </p>
+        ) : null}
+        {removeMutation.isError ? (
+          <p className="mt-3 text-sm text-destructive">
+            Couldn’t remove subscription. Please try again.
+          </p>
         ) : null}
       </div>
 
@@ -103,7 +79,9 @@ function Subscriptions() {
       ) : (
         <div className="space-y-2">
           {sortedSocieties.map((society) => {
-            const isRemoving = !!removing[society.society_name]
+            const isRemoving =
+              removeMutation.isPending &&
+              removeMutation.variables === society.society_name
             const societyImage = societiesJson.find(
               (s) => s.title === society.society_name
             )?.image

@@ -1,7 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000, 
+      gcTime: 5 * 60_000, 
+    },
+  },
+})
+
 export function getContext() {
-  const queryClient = new QueryClient()
   return {
     queryClient,
   }

@@ -7,6 +7,7 @@ import {
   googleCalendarTokensTable,
 } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { googleLink } from "../tools/google-link.js";
 
 dotenv.config();
 
@@ -19,6 +20,20 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
+
+router.get("/google/link", async (req, res) => {
+  try {
+    const userId = String(req.query.userId || "");
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+    const url = await googleLink(userId);
+    return res.json({ url });
+  } catch (err) {
+    console.error("Error generating google link:", err);
+    return res.status(500).json({ error: "Failed to generate link" });
+  }
+});
 
 router.get("/google/connect", async (req, res) => {
   const reqId = String(req.query.req || "");
@@ -46,6 +61,9 @@ router.get("/google/callback", async (req, res) => {
     where: eq(calendarConnectRequestsTable.id, state),
   });
   console.log(connectRequest);
+  if (!connectRequest?.userId) {
+    return res.status(400).json({ error: "Invalid connect request" });
+  }
 
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
@@ -59,13 +77,34 @@ router.get("/google/callback", async (req, res) => {
         new Date(Date.now() + tokens.refresh_token_expires_in * 1000)
       : null;
 
-  await db.insert(googleCalendarTokensTable).values({
-    userId: connectRequest!.userId!,
-    refreshToken: tokens.refresh_token,
-    expiresAt: refreshTokenExpiresAt,
-  });
+  await db
+    .insert(googleCalendarTokensTable)
+    .values({
+      userId: connectRequest.userId,
+      refreshToken: tokens.refresh_token,
+      expiresAt: refreshTokenExpiresAt,
+    })
+    .onConflictDoUpdate({
+      target: googleCalendarTokensTable.userId,
+      set: {
+        refreshToken: tokens.refresh_token,
+        expiresAt: refreshTokenExpiresAt,
+        updatedAt: new Date(),
+      },
+    });
 
-  res.type("html").send(`...connected...`);
+  const frontendUrlRaw =
+    process.env.FRONTEND_APP_URL ||
+    process.env.FRONTEND_BASE_URL ||
+    "http://localhost:5173";
+
+  const frontendUrl = frontendUrlRaw.startsWith("http://") ||
+    frontendUrlRaw.startsWith("https://")
+    ? frontendUrlRaw
+    : `http://${frontendUrlRaw}`;
+
+  return res.redirect(`${frontendUrl}/dashboard/integrations`);
+  // return res.type("html").send(`...connected...`);
 });
 
 export default router;
