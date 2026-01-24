@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogOut, Settings, User } from 'lucide-react'
+import { getInitials } from '@/utils/get-initials'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
@@ -77,7 +78,7 @@ function DashboardLayout() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/40">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-6">
-          <span className="text-lg font-semibold tracking-tight">UNSW Ping</span>
+          <span className="text-xl font-semibold tracking-tight">ping</span>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -130,13 +131,4 @@ function DashboardLayout() {
   )
 }
 
-function getInitials(name: string | undefined): string {
-  if (!name) return 'U'
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
 

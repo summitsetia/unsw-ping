@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useForm } from 'react-hook-form'
+import { smsLink } from '@/utils/sms'
 
 type PhoneFormData = { phone: string }
 type CodeFormData = { code: string }
@@ -108,11 +109,13 @@ function LandingPage() {
         </p>
 
         <div className="mt-10">
-          <button
-            className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
-          >
-            Get started
-          </button>
+          <a href={smsLink('+1 (402) 613-7710', 'Hello, this is a test message.')}>
+            <button
+              className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
+            >
+              Get started
+            </button>
+          </a>
         </div>
       </main>
 
