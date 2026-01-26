@@ -1,4 +1,4 @@
-import client from "../client/axiosClient"
+import client from "../../lib/axiosClient"
 
 export const getSubscriptions = async (token: string) => {
   const { data } = await client.get(`/api/me/subscriptions`, {

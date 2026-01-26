@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { BackArrow } from '@/components/dashboard/back-arrow'
 import { useIntegrations } from '@/hooks/user-queries'
 import { Button } from '@/components/ui/button'
-import client from '@/api/client/axiosClient'
+import client from '@/lib/axiosClient'
 
 export const Route = createFileRoute('/dashboard/integrations')({
   loader: async ({ context }) => {
