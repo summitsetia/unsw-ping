@@ -8,6 +8,7 @@ import {
 } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { googleLink } from "../tools/google-link.js";
+import { supabaseAdmin } from "../utils/supabase.js";
 
 dotenv.config();
 
@@ -22,11 +23,16 @@ const oauth2Client = new google.auth.OAuth2(
 const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
 
 router.get("/google/link", async (req, res) => {
+  const auth = req.header("authorization") ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice("Bearer ".length) : "";
+
+  if (!token) return res.status(401).json({ error: "Missing bearer token" });
+
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !data?.user) return res.status(401).json({ error: "Invalid token" });
+  const userId = data.user.id;
+
   try {
-    const userId = String(req.query.userId || "");
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
     const url = await googleLink(userId);
     return res.json({ url });
   } catch (err) {

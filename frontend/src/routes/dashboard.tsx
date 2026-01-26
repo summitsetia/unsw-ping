@@ -17,43 +17,26 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LogOut, Settings, User } from 'lucide-react'
 import { getInitials } from '@/utils/get-initials'
+import { getProfile } from '@/api/profile'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
     const {
-      data: { user },
+      data: { session },
       error,
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getSession()
 
-    if (error || !user) {
+    if (error || !session) {
       throw redirect({ to: '/' })
     }
 
-    const { data: userId, error: userIdError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('supabase_auth_user_id', user.id)
-      .single()
-
-    if (userIdError) {
-      throw redirect({ to: '/' })
-    }
-
-    return { userId: userId.id }
+    return { token: session?.access_token }
   },
 
   loader: async ({ context }) => {
-    const userId = (context as any).userId as string
+    const token = (context as any).token as string
 
-    const { data: profile, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
-    if (error) {
-      return { profile: null }
-    }
+    const profile = await getProfile(token)
 
     return { profile }
   },

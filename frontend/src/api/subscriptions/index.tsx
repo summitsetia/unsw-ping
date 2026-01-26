@@ -1,31 +1,33 @@
-import { supabase } from "@/lib/supabase"
+import client from "../client/axiosClient"
 
-export const getSubscriptions = async (userId: string) => {
-  const { data, error } = await supabase.from('user_societies').select('society_name').eq('user_id', userId)
-  if (error) {
-    throw error
-  }
+export const getSubscriptions = async (token: string) => {
+  const { data } = await client.get(`/api/me/subscriptions`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+  console.log(data)
   return data
 }
 
-export const removeSubscription = async (userId: string, societyName: string) => {
-  const { error } = await supabase.from('user_societies').delete().eq('user_id', userId).eq('society_name', societyName)
-  if (error) throw error
-  return societyName
+export const removeSubscription = async (token: string, societyName: string) => {
+  const { data } = await client.delete(`/api/me/subscriptions`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    data: {
+      societyName,
+    },
+  })
+  console.log(data)
+  return data
 }
 
-export const addSubscriptions = async (userId: string, societyNames: string[]) => {
-  if (!societyNames.length) return []
-
-  const rows = societyNames.map((society_name) => ({
-    user_id: userId,
-    society_name,
-  }))
-
-  const { error } = await supabase
-    .from('user_societies')
-    .upsert(rows, { onConflict: 'user_id,society_name', ignoreDuplicates: true })
-
-  if (error) throw error
-  return societyNames
-}
+export const addSubscriptions = async (token: string, societyNames: string[]) => {
+  const { data } = await client.post(
+    "/api/me/subscriptions",
+    { societyNames },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return data;
+};

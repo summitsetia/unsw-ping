@@ -2,32 +2,32 @@ import { getGoogleCalendarIntegration } from "@/api/integrations"
 import { addSubscriptions, getSubscriptions, removeSubscription } from "@/api/subscriptions"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-export const useSubscriptions = (userId: string) => {
+export const useSubscriptions = (token: string) => {
   return useQuery({
-    queryKey: ["subscriptions", userId],
-    queryFn: () => getSubscriptions(userId),
-    enabled: !!userId,
+    queryKey: ["subscriptions", token],
+    queryFn: () => getSubscriptions(token),
+    enabled: !!token,
   })
 }
 
-export const useIntegrations = (userId: string) => {
+export const useIntegrations = (token: string) => {
   return useQuery({
-    queryKey: ["integrations", userId],
-    queryFn: () => getGoogleCalendarIntegration(userId),
-    enabled: !!userId,
+    queryKey: ["integrations", token],
+    queryFn: () => getGoogleCalendarIntegration(token),
+    enabled: !!token,
   })
 }
 
-export function useRemoveSubscription(userId: string) {
+export function useRemoveSubscription(token: string) {
   const client = useQueryClient()
 
   return useMutation({
     mutationFn: async (societyName: string) => {
-      return removeSubscription(userId, societyName)
+      return removeSubscription(token, societyName)
     },
 
     onMutate: async (societyName) => {
-      const key = ["subscriptions", userId]
+      const key = ["subscriptions", token]
       await client.cancelQueries({ queryKey: key })
       const previous = client.getQueryData(key)
 
@@ -38,25 +38,25 @@ export function useRemoveSubscription(userId: string) {
     },
 
     onError: (_err, _societyName, context) => {
-      client.setQueryData(["subscriptions", userId], context?.previous)
+      client.setQueryData(["subscriptions", token], context?.previous)
     },
 
     onSettled: () => {
-      client.invalidateQueries({ queryKey: ["subscriptions", userId] })
+      client.invalidateQueries({ queryKey: ["subscriptions", token] })
     },
   })
 }
 
-export function useAddSubscriptions(userId: string) {
+export function useAddSubscriptions(token: string) {
   const client = useQueryClient()
 
   return useMutation({
     mutationFn: async (societyNames: string[]) => {
-      return addSubscriptions(userId, societyNames)
+      return addSubscriptions(token, societyNames)
     },
 
     onMutate: async (societyNames) => {
-      const key = ["subscriptions", userId]
+      const key = ["subscriptions", token]
       await client.cancelQueries({ queryKey: key })
       const previous = client.getQueryData<{ society_name: string }[]>(key) ?? []
 
@@ -70,11 +70,11 @@ export function useAddSubscriptions(userId: string) {
     },
 
     onError: (_err, _societyNames, context) => {
-      client.setQueryData(["subscriptions", userId], context?.previous ?? [])
+      client.setQueryData(["subscriptions", token], context?.previous ?? [])
     },
 
     onSettled: () => {
-      client.invalidateQueries({ queryKey: ["subscriptions", userId] })
+      client.invalidateQueries({ queryKey: ["subscriptions", token] })
     },
   })
 }

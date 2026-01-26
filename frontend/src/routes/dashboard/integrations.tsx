@@ -2,31 +2,37 @@ import { createFileRoute } from '@tanstack/react-router'
 import { BackArrow } from '@/components/dashboard/back-arrow'
 import { useIntegrations } from '@/hooks/user-queries'
 import { Button } from '@/components/ui/button'
+import client from '@/api/client/axiosClient'
 
 export const Route = createFileRoute('/dashboard/integrations')({
   loader: async ({ context }) => {
-    const userId = (context as any).userId as string
-    return { userId }
+    const token = (context as any).token as string
+    return { token }
   },
   component: Integrations,
 })
 
 function Integrations() {
-  const { userId } = Route.useLoaderData() as { userId: string }
-  const { data: integration } = useIntegrations(userId)
+  const { token } = Route.useLoaderData() as { token: string }
+  const { data: integration } = useIntegrations(token)
 
   const handleConnectGoogle = async () => {
     const backendBaseUrl =
       (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
       'http://localhost:3000'
 
-    const resp = await fetch(
-      `${backendBaseUrl}/google/link?userId=${encodeURIComponent(userId)}`
+    const resp = await client.get(
+      `${backendBaseUrl}/google/link`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
     )
-    if (!resp.ok) {
+    if (resp.status !== 200) {
       throw new Error('Failed to start Google OAuth')
     }
-    const data = (await resp.json()) as { url?: string }
+    const data = resp.data as { url?: string }
     if (!data.url) {
       throw new Error('Missing OAuth URL')
     }

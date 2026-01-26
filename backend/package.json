@@ -18,7 +18,7 @@
     "@ai-sdk/openai": "^3.0.2",
     "@supabase/supabase-js": "^2.91.0",
     "ai": "^6.0.5",
-    "axios": "^1.13.2",
+    "axios": "^1.13.3",
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

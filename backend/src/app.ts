@@ -24,18 +24,20 @@ import { addEventToUser } from "./tools/add-event-to-user.js";
 import { addUserSociety, removeUserSociety } from "./tools/user-society.js";
 import cronRouter from "./routes/cron.js";
 import { searchEvents } from "./tools/search-events.js";
-// import { createClerkClient } from "@clerk/backend";
 import { supabaseAdmin } from "./utils/supabase.js";
 import { eq } from "drizzle-orm";
+import meRouter from "./routes/me/index.js";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
-
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -337,6 +339,7 @@ app.post("/webhooks/sendblue", async (req, res) => {
 
 app.use(googleCalendarRouter);
 app.use(cronRouter);
+app.use("/api/me", meRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

@@ -1,17 +1,11 @@
 import { createFileRoute, useMatch } from '@tanstack/react-router'
 import { Link2, MailCheck } from 'lucide-react'
 import { MenuItem } from '@/components/dashboard/menu-item'
+import { getGreeting } from '@/utils/get-greeting'
 
 export const Route = createFileRoute('/dashboard/')({
   component: Dashboard,
 })
-
-function getGreeting(): string {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  return 'Good evening'
-}
 
 function Dashboard() {
   const dashboardMatch = useMatch({ from: '/dashboard' })

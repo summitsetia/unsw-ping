@@ -33,14 +33,14 @@ import {
 
 export const Route = createFileRoute('/dashboard/subscriptions')({
   loader: async ({ context }) => {
-    const userId = (context as any).userId as string
-    return { userId }
+    const token = (context as any).token as string
+    return { token }
   },
   component: Subscriptions,
 })
 
 function Subscriptions() {
-  const { userId } = Route.useLoaderData() as { userId: string }
+  const { token } = Route.useLoaderData() as { token: string }
   const [addOpen, setAddOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -49,9 +49,9 @@ function Subscriptions() {
     data: societies = [],
     isLoading,
     error: subscriptionsError,
-  } = useSubscriptions(userId)
-  const removeMutation = useRemoveSubscription(userId)
-  const addMutation = useAddSubscriptions(userId)
+  } = useSubscriptions(token)
+  const removeMutation = useRemoveSubscription(token)
+  const addMutation = useAddSubscriptions(token)
 
   const sortedSocieties = useMemo(() => {
     return [...societies].sort((a, b) =>
@@ -60,13 +60,13 @@ function Subscriptions() {
   }, [societies])
 
   const subscribedSet = useMemo(() => {
-    return new Set(societies.map((s) => s.society_name))
+    return new Set(societies.map((s: any) => s.society_name))
   }, [societies])
 
   const filteredSocieties = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return societiesJson
-    return societiesJson.filter((s) => s.title.toLowerCase().includes(q))
+    return societiesJson.filter((s: any) => s.title.toLowerCase().includes(q))
   }, [search])
 
   const removeSociety = (societyName: string) => {
@@ -158,7 +158,7 @@ function Subscriptions() {
 
             <ScrollArea className="h-[360px] rounded-md border border-border">
               <div className="p-2">
-                {filteredSocieties.slice(0, 200).map((s) => {
+                {filteredSocieties.slice(0, 200).map((s: any) => {
                   const name = s.title
                   const alreadySubscribed = subscribedSet.has(name)
                   const isSelected = selected.has(name)
@@ -239,7 +239,7 @@ function Subscriptions() {
         </div>
       ) : (
         <div className="space-y-2">
-          {sortedSocieties.map((society) => {
+          {sortedSocieties.map((society: any) => {
             const isRemoving =
               removeMutation.isPending &&
               removeMutation.variables === society.society_name
