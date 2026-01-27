@@ -27,18 +27,22 @@ try {
     const events = await scrapeEvents(eventUrl);
 
     for (const event of events) {
+      console.log("dateText:", JSON.stringify(event.dateText));
       const date = fbWhenToDateSydney(event.dateText);
       if (!date) {
         console.log("FAILED TO PARSE DATE:", event.dateText);
         continue;
       }
+      const start = date.start
+      const end = date.end;
 
       const inserted = await db
         .insert(eventsTable)
         .values({
           societyName: society.title,
           title: event.title,
-          startTime: date,
+          startTime: start,
+          endTime: end,
           location: event.location,
           description: event.description,
         })
@@ -124,7 +128,22 @@ async function scrapeEvents(url: string) {
     await page.goto(eventUrl, { waitUntil: "domcontentloaded" });
     await page.getByRole('button', { name: 'Close' }).click()
 
-    await page.getByText('See more', { exact: true }).click();
+    // const seeMore = page.getByText('See more', { exact: true }).first();
+    // if (await seeMore.isVisible()) {
+    //   await seeMore.click();
+    // }
+
+    const seeMore = page.getByRole("button", { name: "See more" });
+
+    for (let i = 0; i < await seeMore.count(); i++) {
+      const btn = seeMore.nth(i);
+      if (!(await btn.isVisible())) continue;
+
+      if ((await btn.innerText()).trim() !== "See more") continue;
+
+      await btn.evaluate(el => (el as HTMLElement).click());
+      break;
+    }
 
     const eventRoot = page.locator('xpath=//*[@aria-label="Event permalink"]//*[@role="main"]');
     await eventRoot.waitFor({ state: "visible", timeout: 15000 });
@@ -137,28 +156,93 @@ async function scrapeEvents(url: string) {
   return eventInfo;
 }
 
-export function fbWhenToDateSydney(when: string): Date | null {
-  const cleaned = when.replace(/\b(AEDT|AEST|NZDT|NZST)\b/gi, "").trim();
+export function fbWhenToDateSydney(when: string): { start: Date, end: Date | null } | null {
+  if (!when || typeof when !== "string") return null;
+  const cleaned = when
+  .replace(/\b(AEDT|AEST|NZDT|NZST)\b/gi, "")
+  .replace(/\s*[+\-]\d{1,2}(?::\d{2})?/g, "")
+  .replace(/[—–]/g, "-")
+  .trim();
 
-  const formats = [
+  const parts = cleaned.split(/\s-\s/).map((s) => s.trim()).filter(Boolean);
+  const start = parts[0];
+  const end = parts[1];
+
+  const startFormats = [
     "cccc d LLLL yyyy 'at' HH:mm",
     "cccc d LLLL yyyy 'at' h:mm a",
+    "ccc, d LLL 'at' HH:mm",  
+    "ccc, d LLL 'at' H:mm",
+    "ccc d LLL 'at' HH:mm",
+    "d LLL 'at' HH:mm",          
+    "d LLL 'at' H:mm",            
+    "LLL d 'at' HH",
+    "LLL d 'at' HH:mm",
+    "LLL d 'at' H",
+    "LLL d 'at' H:mm",
   ];
 
-  for (const format of formats) {
-    const date = DateTime.fromFormat(cleaned, format, {
+  let startDate: DateTime | null = null;
+  for (const format of startFormats) {
+    const date = DateTime.fromFormat(start, format, {
+      zone: "Australia/Sydney",
+    });
+
+    if (date.isValid) {
+      startDate = date;
+      break;
+    }
+  }
+
+  if (!startDate) return null;
+
+  const now = DateTime.now().setZone("Australia/Sydney");
+  if (startDate < now) return null;
+
+  if (!end) return { start: startDate.toJSDate(), end: null };
+
+
+  const endTimeFormats = ["h:mm a", "hh:mm a", "H:mm", "HH:mm"];
+  for (const format of endTimeFormats) {
+    const date = DateTime.fromFormat(end, format, {
       zone: "Australia/Sydney",
     });
 
     if (!date.isValid) continue;
-
-    const now = DateTime.now().setZone("Australia/Sydney");
-    if (date < now) return null;
-
-    return date.toJSDate();
+    let endDate = startDate.set({ hour: date.hour, minute: date.minute, second: 0, millisecond: 0 });
+    if (endDate <= startDate) endDate = endDate.plus({ days: 1 }); 
+    return { start: startDate.toJSDate(), end: endDate.toJSDate() };
   }
 
-  return null;
+  const endDateFormats = [
+    "cccc d LLLL yyyy 'at' HH:mm",
+    "cccc d LLLL yyyy 'at' h:mm a",
+    "ccc, d LLL 'at' HH:mm",  
+    "ccc, d LLL 'at' H:mm",
+    "ccc d LLL 'at' HH:mm",
+    "d LLL 'at' HH:mm",          
+    "d LLL 'at' H:mm",            
+    "LLL d 'at' HH",
+    "LLL d 'at' HH:mm",
+    "LLL d 'at' H",
+    "LLL d 'at' H:mm",
+  ];
+
+  let endDate: DateTime | null = null;
+  for (const format of endDateFormats) {
+    const date = DateTime.fromFormat(end, format, {
+      zone: "Australia/Sydney",
+    });
+
+    if (date.isValid) {
+      endDate = date;
+      break;
+    }
+  }
+
+  if (!endDate) return { start: startDate.toJSDate(), end: null };
+
+  return { start: startDate.toJSDate(), end: endDate.toJSDate() };
 }
 
 
@@ -199,9 +283,13 @@ export function parseFbEventText(raw: string): ParsedEvent {
     .map(s => s.trim())
     .filter(Boolean);
 
-  const isDateLine = (l: string) =>
-    /\b(at)\b/i.test(l) && /\b(AEDT|AEST|NZDT|NZST)\b/i.test(l);
-
+    const isDateLine = (l: string) => {
+      const hasAt = /\bat\b/i.test(l);
+      const hasMonth = /\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/i.test(l);
+      const hasTime = /\b\d{1,2}(:\d{2})?\b/.test(l); 
+      return hasAt && hasMonth && hasTime;
+    };
+    
   const junk = new Set([
     "Invite", "Details", "Host", "Suggested events",
     "Privacy", "Terms", "Advertising", "Ad choices", "Cookies", "More",
