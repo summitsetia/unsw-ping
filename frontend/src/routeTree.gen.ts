@@ -13,6 +13,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSubscriptionsRouteImport } from './routes/dashboard/subscriptions'
+import { Route as DashboardPromptsRouteImport } from './routes/dashboard/prompts'
 import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard/integrations'
 
 const DashboardRoute = DashboardRouteImport.update({
@@ -35,6 +36,11 @@ const DashboardSubscriptionsRoute = DashboardSubscriptionsRouteImport.update({
   path: '/subscriptions',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardPromptsRoute = DashboardPromptsRouteImport.update({
+  id: '/prompts',
+  path: '/prompts',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardIntegrationsRoute = DashboardIntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
@@ -45,12 +51,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/prompts': typeof DashboardPromptsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/prompts': typeof DashboardPromptsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/dashboard': typeof DashboardIndexRoute
 }
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/prompts': typeof DashboardPromptsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -68,12 +77,14 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/dashboard/integrations'
+    | '/dashboard/prompts'
     | '/dashboard/subscriptions'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard/integrations'
+    | '/dashboard/prompts'
     | '/dashboard/subscriptions'
     | '/dashboard'
   id:
@@ -81,6 +92,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/dashboard/integrations'
+    | '/dashboard/prompts'
     | '/dashboard/subscriptions'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
@@ -120,6 +132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSubscriptionsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/prompts': {
+      id: '/dashboard/prompts'
+      path: '/prompts'
+      fullPath: '/dashboard/prompts'
+      preLoaderRoute: typeof DashboardPromptsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/integrations': {
       id: '/dashboard/integrations'
       path: '/integrations'
@@ -132,12 +151,14 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardIntegrationsRoute: typeof DashboardIntegrationsRoute
+  DashboardPromptsRoute: typeof DashboardPromptsRoute
   DashboardSubscriptionsRoute: typeof DashboardSubscriptionsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIntegrationsRoute: DashboardIntegrationsRoute,
+  DashboardPromptsRoute: DashboardPromptsRoute,
   DashboardSubscriptionsRoute: DashboardSubscriptionsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

@@ -1,4 +1,4 @@
-import societies from "../filtered-societies.json" with { type: "json" };
+import societies from "../societies.json" with { type: "json" };
 import { chromium } from "playwright";
 import { db, client } from "../db/db.js";
 import { eventsTable } from "../db/schema.js";

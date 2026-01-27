@@ -14,7 +14,7 @@ export const Route = createFileRoute('/dashboard/integrations')({
 
 function Integrations() {
   const { token } = Route.useLoaderData() as { token: string }
-  const { data: integration } = useIntegrations(token)
+  const { data: integration, isLoading } = useIntegrations(token)
 
   const handleConnectGoogle = async () => {
     const backendBaseUrl =
@@ -67,9 +67,13 @@ function Integrations() {
               </p>
             </div>
           </div>
-          {integration ? (
+          {integration && !isLoading ? (
             <span className="shrink-0 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-600">
               Active
+            </span>
+          ) : isLoading ? (
+            <span className="shrink-0 rounded-full bg-yellow-500/10 px-2.5 py-0.5 text-xs font-medium text-yellow-600">
+              Loading...
             </span>
           ) : (
             <Button size="sm" onClick={handleConnectGoogle}>
