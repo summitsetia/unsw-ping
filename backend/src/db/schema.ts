@@ -72,6 +72,10 @@ export const eventsTable = pgTable(
       withTimezone: true,
       mode: "date",
     }).notNull(),
+    endTime: timestamp("end_time", {
+      withTimezone: true,
+      mode: "date",
+    }),
     location: text("location").notNull().default(""),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .notNull()

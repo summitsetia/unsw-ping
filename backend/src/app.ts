@@ -161,6 +161,7 @@ app.post("/webhooks/sendblue", async (req, res) => {
       - When recommending, keep it tight: 2–4 bullets max, each bullet includes:
         - society/event name (from tools)
         - date + time (Australia/Sydney)
+        - end time (Australia/Sydney) if provided
         - location (if provided)
       - Avoid “menus” (“Pick one: A/B/C”) unless the user says “idk” or gives almost nothing.
       - DONT TELL THE USER WHAT YOU ARE GONNA DO, JUST DO IT.
