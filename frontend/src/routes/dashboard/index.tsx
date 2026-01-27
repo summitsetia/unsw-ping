@@ -1,5 +1,5 @@
 import { createFileRoute, useMatch } from '@tanstack/react-router'
-import { Link2, MailCheck } from 'lucide-react'
+import { Link2, MailCheck, MessageCircleMore } from 'lucide-react'
 import { MenuItem } from '@/components/dashboard/menu-item'
 import { getGreeting } from '@/utils/get-greeting'
 
@@ -17,6 +17,12 @@ function Dashboard() {
   const greeting = getGreeting()
 
   const menuItems = [
+    {
+      title: 'Prompts',
+      description: 'Browse through our prompts to message ping',
+      icon: MessageCircleMore,
+      to: '/dashboard/prompts',
+    },
     {
       title: 'Event Subscriptions',
       description: 'Manage your event subscriptions',
