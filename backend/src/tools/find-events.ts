@@ -15,6 +15,7 @@ export const findEvents = async (societies: string[]) => {
       societyName: eventsTable.societyName,
       title: eventsTable.title,
       startTime: eventsTable.startTime,
+      endTime: eventsTable.endTime,
       location: eventsTable.location,
     })
     .from(eventsTable)
@@ -29,9 +30,12 @@ export const findEvents = async (societies: string[]) => {
       const startSydney = DateTime.fromJSDate(e.startTime).setZone(
         "Australia/Sydney"
       );
+      const endSydney = e.endTime ? DateTime.fromJSDate(e.endTime).setZone(
+        "Australia/Sydney"
+      ) : null;
       if (startSydney <= nowSyd) return null;
 
-      return { ...e, startTime: startSydney.toJSDate() };
+      return { ...e, startTime: startSydney.toJSDate(), endTime: endSydney ? endSydney.toJSDate() : undefined };
     })
     .filter((e): e is NonNullable<typeof e> => e !== null);
 };

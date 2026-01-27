@@ -21,6 +21,7 @@ export const searchEvents = async (query: string) => {
       description: eventsTable.description,
       location: eventsTable.location,
       startTime: eventsTable.startTime,
+      endTime: eventsTable.endTime,
       distance,
     })
     .from(eventsTable)
@@ -39,5 +40,8 @@ export const searchEvents = async (query: string) => {
     startTimeSydney: DateTime.fromJSDate(r.startTime)
       .setZone("Australia/Sydney")
       .toISO(),
+    endTimeSydney: r.endTime ? DateTime.fromJSDate(r.endTime)
+      .setZone("Australia/Sydney")
+      .toISO() : undefined,
   }));
 };
