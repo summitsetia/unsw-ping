@@ -7,8 +7,8 @@ import { AuthedRequest } from "../../middleware/requireUser.js";
 const router = Router();
 
 router.get('/', async (req, res) => {
-  const googleCalendarIntegration = await db.select().from(googleCalendarTokensTable).where(eq(googleCalendarTokensTable.userId, (req as AuthedRequest).userId))
-  return res.json(googleCalendarIntegration)
+  const googleCalendarIntegration = await db.select({ refreshToken: googleCalendarTokensTable.refreshToken }).from(googleCalendarTokensTable).where(eq(googleCalendarTokensTable.userId, (req as AuthedRequest).userId))
+  return res.json(googleCalendarIntegration[0]?.refreshToken ? { connected: true } : { connected: false })
 })
 
 export default router;

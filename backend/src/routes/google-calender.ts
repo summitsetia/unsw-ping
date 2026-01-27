@@ -5,6 +5,7 @@ import { db } from "../db/db.js";
 import {
   calendarConnectRequestsTable,
   googleCalendarTokensTable,
+  usersTable,
 } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { googleLink } from "../tools/google-link.js";
@@ -30,7 +31,9 @@ router.get("/google/link", async (req, res) => {
 
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data?.user) return res.status(401).json({ error: "Invalid token" });
-  const userId = data.user.id;
+  const authUserId = data.user.id;
+  const userIdQuery = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.supabaseAuthUserId, authUserId));
+  const userId = userIdQuery[0]?.id;
 
   try {
     const url = await googleLink(userId);

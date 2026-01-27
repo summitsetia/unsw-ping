@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useForm } from 'react-hook-form'
 import { smsLink } from '@/utils/sms'
+import { MessageCircleIcon } from 'lucide-react'
 
 type PhoneFormData = { phone: string }
 type CodeFormData = { code: string }
@@ -109,11 +110,11 @@ function LandingPage() {
         </p>
 
         <div className="mt-10">
-          <a href={smsLink('+1 (402) 613-7710', 'Hello, this is a test message.')}>
+          <a href={smsLink('+1 (402) 613-7710', 'Yo, what can you do for me anyways?')}>
             <button
               className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
             >
-              Get started
+              <span className="flex items-center"><MessageCircleIcon className="w-4 h-4 mr-2" /> Get started</span>
             </button>
           </a>
         </div>

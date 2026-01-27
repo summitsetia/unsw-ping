@@ -1,11 +1,10 @@
 import client from "../../lib/axiosClient"
 
-export const getGoogleCalendarIntegration = async (token: string) => {
+export const getGoogleCalendarIntegration = async (token: string): Promise<{ connected: boolean }> => {
   const { data } = await client.get(`/api/me/integrations`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
   })
-  console.log(data)
   return data;
 }
