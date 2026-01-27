@@ -18,6 +18,8 @@ import {
 import { LogOut, Settings, User } from 'lucide-react'
 import { getInitials } from '@/utils/get-initials'
 import { getProfile } from '@/api/profile'
+import { integrationsQueryOptions } from '@/queries/integrations'
+import { subscriptionsQueryOptions } from '@/queries/subscriptions'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
@@ -37,6 +39,9 @@ export const Route = createFileRoute('/dashboard')({
     const token = (context as any).token as string
 
     const profile = await getProfile(token)
+
+    void context.queryClient.prefetchQuery(integrationsQueryOptions(token))
+    void context.queryClient.prefetchQuery(subscriptionsQueryOptions(token))
 
     return { profile }
   },

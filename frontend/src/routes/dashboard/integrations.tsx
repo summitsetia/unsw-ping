@@ -63,11 +63,11 @@ function Integrations() {
             <div className="min-w-0">
               <p className="font-medium text-foreground">Google Calendar</p>
               <p className="text-sm text-muted-foreground">
-                {integration ? 'Connected' : 'Not connected'}
+                {integration?.connected ? 'Connected' : 'Not connected'}
               </p>
             </div>
           </div>
-          {integration && !isLoading ? (
+          {integration?.connected && !isLoading ? (
             <span className="shrink-0 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-600">
               Active
             </span>

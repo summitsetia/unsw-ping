@@ -16,7 +16,8 @@ export const addEventToUser = async (
   userId: string,
   summary: string,
   location?: string,
-  start?: Date
+  start?: Date,
+  end?: Date
 ) => {
   console.log("[addEventToUser] called", { userId, summary, location, start });
 
@@ -32,7 +33,7 @@ export const addEventToUser = async (
   oauth2Client.setCredentials({ refresh_token: row.refreshToken });
 
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
-  const end = new Date(start.getTime() + 30 * 60 * 1000);
+  const endTime = end ? end : new Date(start.getTime() + 30 * 60 * 1000);
 
   try {
     console.log("[addEventToUser] inserting event…");
@@ -47,7 +48,7 @@ export const addEventToUser = async (
           timeZone: "Australia/Sydney",
         },
         end: {
-          dateTime: end.toISOString(),
+          dateTime: endTime.toISOString(),
           timeZone: "Australia/Sydney",
         },
       },

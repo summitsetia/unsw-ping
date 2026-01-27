@@ -25,11 +25,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Check, Plus, Search, Trash2 } from 'lucide-react'
 import societiesJson from '@/constants/societies.json'
 import { BackArrow } from '@/components/dashboard/back-arrow'
-import {
-  useAddSubscriptions,
-  useRemoveSubscription,
-  useSubscriptions,
-} from '@/hooks/user-queries'
+import { useRemoveSubscription, useAddSubscriptions } from '@/hooks/use-subscriptions'
+import { useSubscriptions } from '@/hooks/user-queries'
+
 
 export const Route = createFileRoute('/dashboard/subscriptions')({
   loader: async ({ context }) => {

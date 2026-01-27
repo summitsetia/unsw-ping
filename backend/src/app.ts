@@ -262,9 +262,16 @@ app.post("/webhooks/sendblue", async (req, res) => {
               .describe(
                 "The event start time (ISO datetime, e.g. 2026-01-11T10:30:00+11:00)"
               ),
+            end: z
+              .string()
+              .describe(
+                "The event end time (ISO datetime, e.g. 2026-01-11T10:30:00+11:00)"
+              )
+              .optional(),
           }),
-          execute: async ({ title, location, start }) => {
+          execute: async ({ title, location, start, end }) => {
             const startDate = new Date(start);
+            const endDate = end ? new Date(end) : undefined;
             if (Number.isNaN(startDate.getTime())) {
               throw new Error(
                 "Invalid 'start' datetime. Expected ISO datetime string."
@@ -275,7 +282,8 @@ app.post("/webhooks/sendblue", async (req, res) => {
               userId,
               title,
               location,
-              startDate
+              startDate,
+              endDate
             );
             console.log("Event added to Google Calendar", event);
             return { event };
