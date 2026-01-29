@@ -13,7 +13,9 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSubscriptionsRouteImport } from './routes/dashboard/subscriptions'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardPromptsRouteImport } from './routes/dashboard/prompts'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard/integrations'
 
 const DashboardRoute = DashboardRouteImport.update({
@@ -36,9 +38,19 @@ const DashboardSubscriptionsRoute = DashboardSubscriptionsRouteImport.update({
   path: '/subscriptions',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardPromptsRoute = DashboardPromptsRouteImport.update({
   id: '/prompts',
   path: '/prompts',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardIntegrationsRoute = DashboardIntegrationsRouteImport.update({
@@ -51,14 +63,18 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/prompts': typeof DashboardPromptsRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/prompts': typeof DashboardPromptsRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/dashboard': typeof DashboardIndexRoute
 }
@@ -67,7 +83,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/prompts': typeof DashboardPromptsRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/subscriptions': typeof DashboardSubscriptionsRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -77,14 +95,18 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/dashboard/integrations'
+    | '/dashboard/profile'
     | '/dashboard/prompts'
+    | '/dashboard/settings'
     | '/dashboard/subscriptions'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard/integrations'
+    | '/dashboard/profile'
     | '/dashboard/prompts'
+    | '/dashboard/settings'
     | '/dashboard/subscriptions'
     | '/dashboard'
   id:
@@ -92,7 +114,9 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/dashboard/integrations'
+    | '/dashboard/profile'
     | '/dashboard/prompts'
+    | '/dashboard/settings'
     | '/dashboard/subscriptions'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
@@ -132,11 +156,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSubscriptionsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/prompts': {
       id: '/dashboard/prompts'
       path: '/prompts'
       fullPath: '/dashboard/prompts'
       preLoaderRoute: typeof DashboardPromptsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/integrations': {
@@ -151,14 +189,18 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardIntegrationsRoute: typeof DashboardIntegrationsRoute
+  DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardPromptsRoute: typeof DashboardPromptsRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSubscriptionsRoute: typeof DashboardSubscriptionsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIntegrationsRoute: DashboardIntegrationsRoute,
+  DashboardProfileRoute: DashboardProfileRoute,
   DashboardPromptsRoute: DashboardPromptsRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSubscriptionsRoute: DashboardSubscriptionsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

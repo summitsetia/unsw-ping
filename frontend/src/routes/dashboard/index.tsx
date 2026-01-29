@@ -1,17 +1,16 @@
-import { createFileRoute, useMatch } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { Link2, MailCheck, MessageCircleMore } from 'lucide-react'
 import { MenuItem } from '@/components/dashboard/menu-item'
 import { getGreeting } from '@/utils/get-greeting'
+import { useUserProfile } from '@/hooks/user-queries'
 
 export const Route = createFileRoute('/dashboard/')({
   component: Dashboard,
 })
 
 function Dashboard() {
-  const dashboardMatch = useMatch({ from: '/dashboard' })
-  const { profile } = (dashboardMatch.loaderData ?? {}) as {
-    profile: { name?: string } | null
-  }
+  const { token } = Route.useRouteContext() as { token: string }
+  const { data: profile } = useUserProfile(token)
 
   const userName = profile?.name?.trim() || 'User'
   const greeting = getGreeting()

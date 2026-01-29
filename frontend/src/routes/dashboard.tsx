@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import {
+  Link,
   Outlet,
   createFileRoute,
   redirect,
@@ -20,6 +21,8 @@ import { getInitials } from '@/utils/get-initials'
 import { getProfile } from '@/api/profile'
 import { integrationsQueryOptions } from '@/queries/integrations'
 import { subscriptionsQueryOptions } from '@/queries/subscriptions'
+import { useUserProfile } from '@/hooks/user-queries'
+import { userProfileQueryOptions } from '@/queries/user-profile'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
@@ -38,21 +41,18 @@ export const Route = createFileRoute('/dashboard')({
   loader: async ({ context }) => {
     const token = (context as any).token as string
 
-    const profile = await getProfile(token)
+    await context.queryClient.prefetchQuery(userProfileQueryOptions(token))
 
     void context.queryClient.prefetchQuery(integrationsQueryOptions(token))
     void context.queryClient.prefetchQuery(subscriptionsQueryOptions(token))
-
-    return { profile }
   },
 
   component: DashboardLayout,
 })
 
 function DashboardLayout() {
-  const { profile } = Route.useLoaderData() as {
-    profile: { name?: string; phone_number?: string } | null
-  }
+  const { token } = Route.useRouteContext() as { token: string }
+  const { data: profile } = useUserProfile(token)
   const navigate = useNavigate()
 
   const userName = profile?.name?.trim() || 'User'
@@ -90,14 +90,18 @@ function DashboardLayout() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
+                <Link to="/dashboard/profile">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/dashboard/settings">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                </Link>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem
