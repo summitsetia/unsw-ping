@@ -16,7 +16,6 @@ type PromptItem = {
   title: string
   description: string
   message: string
-  category?: string
 }
 
 function PromptsPage() {
@@ -26,54 +25,41 @@ function PromptsPage() {
 
   const prompts: PromptItem[] = [
     {
-      id: 'find-events',
-      title: 'Find events this week',
-      description: 'Get a shortlist of events from my subscribed societies.',
-      category: 'Events',
+      id: 'find-events-with-free-food',
+      title: 'Find events with free food',
+      description: 'Get a shortlist of events with free food',
+      message: 'Any events with free food happening soon?',
+    },
+    {
+      id: 'events-happening-for-degree',
+      title: 'Find events happening for my degree',
+      description: 'Get a shortlist of events happening for my degree',
+      message: 'Any events happening soon for <degree name> students?',
+    },
+    {
+      id: 'networking-events',
+      title: 'Find networking events',
+      description: 'Get a shortlist of networking events happening soon',
+      message: 'Any networking events happening soon?',
+    },
+    {
+      id: 'meet-people',
+      title: 'Find events to meet people',
+      description: 'Get a shortlist of events to meet people',
       message:
-        `Find events happening this week from my subscribed societies. ` +
-        `Show title, time (Sydney), location, and include links if possible.`,
+        'Any events to meet people happening soon?',
     },
     {
-      id: 'add-society',
-      title: 'Subscribe to a society',
-      description: 'Tell Ping what society I want added.',
-      category: 'Subscriptions',
-      message:
-        `Subscribe me to: <society name>\n` +
-        `If there are multiple matches, ask me to pick one.`,
+      id: 'party-events',
+      title: 'Find party events',
+      description: 'Get a shortlist of party events happening soon',
+      message: 'Any party events happening soon?',
     },
     {
-      id: 'unsub-society',
-      title: 'Unsubscribe from a society',
-      description: 'Stop getting updates from one society.',
-      category: 'Subscriptions',
-      message: `Unsubscribe me from: <society name>`,
-    },
-    {
-      id: 'calendar',
-      title: 'Add next event to my calendar',
-      description: 'Create a calendar entry with location + reminders.',
-      category: 'Calendar',
-      message:
-        `Add the next event I’m going to into my calendar. ` +
-        `Use the correct timezone and set a reminder 1 hour before.`,
-    },
-    {
-      id: 'study-plan',
-      title: 'Plan my week',
-      description: 'Turn deadlines + events into a simple schedule.',
-      category: 'Productivity',
-      message:
-        `Help me plan this week. Ask for my deadlines + commitments, ` +
-        `then make a simple daily plan (1–2 key tasks per day).`,
-    },
-    {
-      id: 'quick-help',
-      title: 'Quick question',
-      description: 'Open a blank message to Ping.',
-      category: 'General',
-      message: `Hey Ping — `,
+      id: 'hackathons',
+      title: 'Find hackathons',
+      description: 'Get a shortlist of hackathons happening soon',
+      message: 'Any hackathons happening soon?',
     },
   ]
 
@@ -81,7 +67,7 @@ function PromptsPage() {
     const q = search.trim().toLowerCase()
     if (!q) return prompts
     return prompts.filter((p) => {
-      const hay = `${p.title} ${p.description} ${p.category ?? ''}`.toLowerCase()
+      const hay = `${p.title} ${p.description}`.toLowerCase()
       return hay.includes(q)
     })
   }, [search])
@@ -145,11 +131,6 @@ function PromptsPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-medium">{p.title}</p>
-                      {p.category ? (
-                        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                          {p.category}
-                        </span>
-                      ) : null}
                     </div>
                     <p className="truncate text-sm text-muted-foreground">
                       {p.description}
@@ -183,7 +164,7 @@ function PromptsPage() {
       )}
 
       <div className="mt-4 text-xs text-muted-foreground">
-        Tip: edit the prompt placeholders like <span className="font-medium">&lt;society name&gt;</span> before sending.
+        Tip: edit the prompt placeholders like <span className="font-medium">&lt;degree name&gt;</span> before sending.
       </div>
     </>
   )

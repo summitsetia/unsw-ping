@@ -6,6 +6,7 @@ import client from '@/lib/axiosClient'
 
 export const Route = createFileRoute('/dashboard/integrations')({
   loader: async ({ context }) => {
+
     const token = (context as any).token as string
     return { token }
   },
