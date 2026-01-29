@@ -16,10 +16,12 @@ router.get('/', async (req, res) => {
 })
 
 router.delete('/', async (req, res) => {
-  const [{ authUserId }] = await db
+  const id = await db
     .select({ authUserId: usersTable.supabaseAuthUserId })
     .from(usersTable)
     .where(eq(usersTable.id, (req as AuthedRequest).userId));
+
+  const authUserId = id[0]?.authUserId
 
   if (!authUserId) {
     return res.status(400).json({ message: "User not found or already deleted." });
