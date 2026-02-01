@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LogOut, Settings, User } from 'lucide-react'
 import { getInitials } from '@/utils/get-initials'
-import { getProfile } from '@/api/profile'
 import { integrationsQueryOptions } from '@/queries/integrations'
 import { subscriptionsQueryOptions } from '@/queries/subscriptions'
 import { useUserProfile } from '@/hooks/user-queries'
