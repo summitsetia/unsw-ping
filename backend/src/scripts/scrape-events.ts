@@ -108,10 +108,18 @@ async function scrapeEvents(url: string) {
     return [];
   }
 
-  await page.getByRole('button', { name: 'Close' }).click()
+  if (await page.getByRole('button', { name: 'Close' }).isVisible()) {
+    await page.getByRole('button', { name: 'Close' }).click();
+  }
 
   const links = page.locator('a[href*="/events/"]');
   const count = await links.count();
+
+  if (count === 0) {
+    console.log("No events found");
+    await browser.close();
+    return [];
+  }
   
   const ids = new Set<string>();
   
@@ -126,7 +134,9 @@ async function scrapeEvents(url: string) {
   const eventInfo: ParsedEvent[] = [];
   for (const eventUrl of eventUrls) {
     await page.goto(eventUrl, { waitUntil: "domcontentloaded" });
-    await page.getByRole('button', { name: 'Close' }).click()
+    if (await page.getByRole('button', { name: 'Close' }).isVisible()) {
+      await page.getByRole('button', { name: 'Close' }).click();
+    }
 
     // const seeMore = page.getByText('See more', { exact: true }).first();
     // if (await seeMore.isVisible()) {

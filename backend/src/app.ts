@@ -42,6 +42,11 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.get("/health", (_req, res) => {
+  res.status(200).send("ok");
+});
+
+
 app.post("/webhooks/sendblue", async (req, res) => {
   try {
     console.log("Received webhook from Sendblue");
@@ -376,8 +381,8 @@ app.use(googleCalendarRouter);
 app.use(cronRouter);
 app.use("/api/me", meRouter);
 
-app.listen(port, () => {
+app.listen(Number(port), "0.0.0.0", () => {
   console.log(`Server is running on port ${port}`);
-});
+},);
 
 export default app;
