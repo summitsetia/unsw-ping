@@ -1,4 +1,4 @@
-import societies from "../societies.json" with { type: "json" };
+import societies from "../filtered-societies.json" with { type: "json" };
 import { chromium } from "playwright";
 import { db, client } from "../db/db.js";
 import { eventsTable } from "../db/schema.js";
@@ -169,9 +169,12 @@ async function scrapeEvents(url: string) {
 export function fbWhenToDateSydney(when: string): { start: Date, end: Date | null } | null {
   if (!when || typeof when !== "string") return null;
   const cleaned = when
-  .replace(/\b(AEDT|AEST|NZDT|NZST)\b/gi, "")
+  .replace(/\b(AEDT|AEST|NZDT|NZST|UTC|GMT)\b/gi, "")
   .replace(/\s*[+\-]\d{1,2}(?::\d{2})?/g, "")
   .replace(/[—–]/g, "-")
+  .replace(/\bfrom\b/gi, "at")  
+  .replace(/(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/, "$1 - $2")  
+  .replace(/(\d{1,2})-(\d{1,2})(?!:)/, "$1 - $2")  
   .trim();
 
   const parts = cleaned.split(/\s-\s/).map((s) => s.trim()).filter(Boolean);
@@ -179,17 +182,33 @@ export function fbWhenToDateSydney(when: string): { start: Date, end: Date | nul
   const end = parts[1];
 
   const startFormats = [
+    "cccc, LLLL d, yyyy 'at' HH:mm",
+    "cccc, LLLL d, yyyy 'at' H:mm",
+    "cccc, LLLL d, yyyy 'at' HH",
+    "cccc, LLLL d, yyyy 'at' H",
+    "cccc, LLLL d, yyyy 'at' h:mm a",
+    "cccc, LLLL d, yyyy 'at' h a",
     "cccc d LLLL yyyy 'at' HH:mm",
+    "cccc d LLLL yyyy 'at' H:mm",
+    "cccc d LLLL yyyy 'at' HH",
+    "cccc d LLLL yyyy 'at' H",
     "cccc d LLLL yyyy 'at' h:mm a",
+    "cccc d LLLL yyyy 'at' h a",
     "ccc, d LLL 'at' HH:mm",  
     "ccc, d LLL 'at' H:mm",
+    "ccc, d LLL 'at' HH",
+    "ccc, d LLL 'at' H",
     "ccc d LLL 'at' HH:mm",
+    "ccc d LLL 'at' HH",
+    "ccc d LLL 'at' H",
     "d LLL 'at' HH:mm",          
-    "d LLL 'at' H:mm",            
-    "LLL d 'at' HH",
+    "d LLL 'at' H:mm",
+    "d LLL 'at' HH",
+    "d LLL 'at' H",
     "LLL d 'at' HH:mm",
-    "LLL d 'at' H",
     "LLL d 'at' H:mm",
+    "LLL d 'at' HH",
+    "LLL d 'at' H",
   ];
 
   let startDate: DateTime | null = null;
@@ -212,7 +231,7 @@ export function fbWhenToDateSydney(when: string): { start: Date, end: Date | nul
   if (!end) return { start: startDate.toJSDate(), end: null };
 
 
-  const endTimeFormats = ["h:mm a", "hh:mm a", "H:mm", "HH:mm"];
+  const endTimeFormats = ["h:mm a", "hh:mm a", "h a", "H:mm", "HH:mm", "H", "HH"];
   for (const format of endTimeFormats) {
     const date = DateTime.fromFormat(end, format, {
       zone: "Australia/Sydney",
@@ -225,17 +244,33 @@ export function fbWhenToDateSydney(when: string): { start: Date, end: Date | nul
   }
 
   const endDateFormats = [
+    "cccc, LLLL d, yyyy 'at' HH:mm",
+    "cccc, LLLL d, yyyy 'at' H:mm",
+    "cccc, LLLL d, yyyy 'at' HH",
+    "cccc, LLLL d, yyyy 'at' H",
+    "cccc, LLLL d, yyyy 'at' h:mm a",
+    "cccc, LLLL d, yyyy 'at' h a",
     "cccc d LLLL yyyy 'at' HH:mm",
+    "cccc d LLLL yyyy 'at' H:mm",
+    "cccc d LLLL yyyy 'at' HH",
+    "cccc d LLLL yyyy 'at' H",
     "cccc d LLLL yyyy 'at' h:mm a",
+    "cccc d LLLL yyyy 'at' h a",
     "ccc, d LLL 'at' HH:mm",  
     "ccc, d LLL 'at' H:mm",
+    "ccc, d LLL 'at' HH",
+    "ccc, d LLL 'at' H",
     "ccc d LLL 'at' HH:mm",
+    "ccc d LLL 'at' HH",
+    "ccc d LLL 'at' H",
     "d LLL 'at' HH:mm",          
-    "d LLL 'at' H:mm",            
-    "LLL d 'at' HH",
+    "d LLL 'at' H:mm",
+    "d LLL 'at' HH",
+    "d LLL 'at' H",
     "LLL d 'at' HH:mm",
-    "LLL d 'at' H",
     "LLL d 'at' H:mm",
+    "LLL d 'at' HH",
+    "LLL d 'at' H",
   ];
 
   let endDate: DateTime | null = null;
@@ -288,25 +323,46 @@ function normalizeFacebookPageUrl(raw: unknown): string | null {
 }
 
 export function parseFbEventText(raw: string): ParsedEvent {
-  const lines = raw
+  let lines = raw
     .split("\n")
     .map(s => s.trim())
     .filter(Boolean);
 
-    const isDateLine = (l: string) => {
-      const hasAt = /\bat\b/i.test(l);
-      const hasMonth = /\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/i.test(l);
-      const hasTime = /\b\d{1,2}(:\d{2})?\b/.test(l); 
-      return hasAt && hasMonth && hasTime;
-    };
+  const suggestedIdx = lines.findIndex(l => /^Suggested events$/i.test(l));
+  if (suggestedIdx >= 0) lines = lines.slice(0, suggestedIdx);
+
+  const isDateLine = (l: string) => {
+    const hasMonth =
+      /\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/i.test(l);
+    const hasTime = /\b\d{1,2}(:\d{2})?\s*(AM|PM|am|pm)?\b/.test(l);
+    const hasAtOrFrom = /\b(at|from)\b/i.test(l);
+    const hasTimezone = /\b(AEDT|AEST|NZDT|NZST|UTC|GMT)\b/i.test(l);
+    const hasDayOfWeek = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/i.test(l);
+    const hasDateSeparator = /[–—-]/.test(l);
     
+    if (!hasMonth) return false;
+    if (hasAtOrFrom && hasTime) return true;
+    if (hasTimezone && hasTime) return true;
+    if (hasDayOfWeek && hasTime) return true;
+    if (hasMonth && hasTime && hasDateSeparator) return true;
+    return false;
+  };
+
+  const headerWindow = lines.slice(0, 100);
+  const dateIdxInHeader = headerWindow.findIndex(isDateLine);
+  const dateIdx = dateIdxInHeader >= 0 ? dateIdxInHeader : -1;
+  
+  if (dateIdx < 0) {
+    console.log("DEBUG: No date found in first 100 lines. First 20 lines:");
+    lines.slice(0, 20).forEach((l, i) => console.log(`  ${i}: ${l}`));
+  }
+
   const junk = new Set([
     "Invite", "Details", "Host", "Suggested events",
     "Privacy", "Terms", "Advertising", "Ad choices", "Cookies", "More",
     "About", "Discussion",
   ]);
 
-  const dateIdx = lines.findIndex(isDateLine);
   const dateText = dateIdx >= 0 ? lines[dateIdx] : "";
   const title = dateIdx >= 0 ? (lines[dateIdx + 1] ?? "") : "";
 
@@ -332,28 +388,25 @@ export function parseFbEventText(raw: string): ParsedEvent {
   }
 
   const stopRe = /^(Host|Suggested events|Privacy)$/i;
-
   const descLines: string[] = [];
+
   for (let i = startIdx; i < lines.length; i++) {
     const l = lines[i];
-
     if (stopRe.test(l)) break;
     if (junk.has(l)) continue;
-
     if (isDateLine(l)) continue;
     if (/people responded/i.test(l)) continue;
     if (/^Event by /i.test(l)) continue;
     if (/^Public$/i.test(l)) continue;
-
     if (/^See (less|more)$/i.test(l)) continue;
 
     descLines.push(l);
   }
 
   const description = descLines.join("\n").trim();
-
   return { title, dateText, location, description };
 }
+
 
 
 
