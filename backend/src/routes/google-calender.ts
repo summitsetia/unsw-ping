@@ -103,8 +103,7 @@ router.get("/google/callback", async (req, res) => {
     });
 
   const frontendUrlRaw =
-    process.env.FRONTEND_APP_URL ||
-    process.env.FRONTEND_BASE_URL ||
+    process.env.FRONTEND_URL ||
     "http://localhost:5173";
 
   const frontendUrl = frontendUrlRaw.startsWith("http://") ||
