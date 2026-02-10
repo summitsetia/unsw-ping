@@ -34,7 +34,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: ["https://ping.summitsetia.com", "http://localhost:5173"],
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -48,6 +48,7 @@ app.get("/health", (_req, res) => {
 
 
 app.post("/webhooks/sendblue", async (req, res) => {
+  console.log(req.body);
   try {
     console.log("Received webhook from Sendblue");
     const { content, from_number, message_handle, is_outbound, status } =
